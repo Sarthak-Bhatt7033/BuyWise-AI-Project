@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Search Products — BuyWise AI{% endblock %}
+{% block meta_description %}Search any product and get an instant AI-powered trust score, analysis, fake review detection, and a comprehensive buying report from BuyWise AI.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="search-page">
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SEARCH HERO
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="search-hero" aria-labelledby="search-heading">
+    <div class="search-hero-glow" aria-hidden="true"></div>
+
+    <div class="container search-hero-content">
+      <div class="section-label" style="margin: 0 auto var(--space-4);">
+        <i data-lucide="cpu" width="12" height="12"></i>
+        AI-Powered Search
+      </div>
+      <h1 id="search-heading">
+        Search Any <span class="gradient-text">Product</span>
+      </h1>
+      <p class="search-hero-sub">
+        Type a product name and our AI will analyze it instantly — trust score, specs, pros & cons, and more.
+      </p>
+
+      <!-- ── Search Bar ── -->
+      <div class="search-input-area">
+        <form id="search-form" role="search" aria-label="Product search">
+          <div class="search-bar-wrapper">
+            <!-- Icon absolutely inside wrapper -->
+            <span class="search-icon-left" aria-hidden="true">
+              <i data-lucide="search" width="20" height="20"></i>
+            </span>
+            <!-- Input is a flex child -->
+            <input
+              type="search"
+              id="search-input"
+              class="search-input"
+              placeholder="Search any product… e.g. iPhone 15, Sony WH-1000XM5"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Search for a product"
+              aria-autocomplete="list"
+              aria-controls="search-suggestions"
+              maxlength="200"
+            >
+            <!-- Submit button is a flex child inside the card -->
+            <button type="submit" class="search-submit-btn" id="search-submit" aria-label="Analyze product">
+              <span class="submit-icon" style="display:flex;align-items:center;gap:6px;">
+                <i data-lucide="sparkles" width="15" height="15"></i>
+                Analyze
+              </span>
+              <span class="submit-spinner" style="display:none;align-items:center;gap:6px;">
+                <div class="spinner" style="width:15px;height:15px;border-color:rgba(255,255,255,0.35);border-top-color:#fff;"></div>
+                Analyzing…
+              </span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Suggestions Dropdown -->
+        <div
+          class="search-suggestions"
+          id="search-suggestions"
+          role="listbox"
+          aria-label="Search suggestions"
+        ></div>
+
+        <!-- Trending Tags -->
+        <div class="trending-tags">
+          <span class="trending-label">
+            <i data-lucide="trending-up" width="14" height="14"></i>
+            Trending:
+          </span>
+          <button class="trending-tag" type="button">iPhone 15 Pro</button>
+          <button class="trending-tag" type="button">Sony WH-1000XM5</button>
+          <button class="trending-tag" type="button">MacBook Pro M3</button>
+          <button class="trending-tag" type="button">PS5</button>
+          <button class="trending-tag" type="button">DJI Mini 4</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       RESULTS AREA
+       ════════════════════════════════════════════════════════════════════ -->
+  <div class="search-results-area">
+
+    <!-- ── Empty / Initial State ── -->
+    <div class="search-empty-state" id="empty-state" style="display:flex;">
+      <div class="empty-icon-wrap" aria-hidden="true">
+        <i data-lucide="search" width="36" height="36"></i>
+      </div>
+      <h3>Start with a product search</h3>
+      <p>Type any product name above and our AI will generate a detailed analysis with a trust score, specs, pros & cons, and more.</p>
+      <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;justify-content:center;">
+        <button class="trending-tag" type="button" onclick="document.getElementById('search-input').value='Sony WH-1000XM5';document.getElementById('search-form').dispatchEvent(new Event('submit'))">
+          Try: Sony WH-1000XM5
+        </button>
+        <button class="trending-tag" type="button" onclick="document.getElementById('search-input').value='MacBook Pro M3';document.getElementById('search-form').dispatchEvent(new Event('submit'))">
+          Try: MacBook Pro M3
+        </button>
+      </div>
+    </div>
+
+    <!-- ── AI Thinking State ── -->
+    <div class="ai-thinking" id="ai-thinking" aria-live="polite" aria-busy="true" style="display:none;">
+      <div class="thinking-ring" aria-hidden="true">
+        <div class="thinking-inner"></div>
+      </div>
+      <h3>Analyzing product…</h3>
+      <p>Our AI is researching specifications, scanning reviews, and calculating the trust score.</p>
+      <div class="dots-loader" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- ── Error State ── -->
+    <div class="search-error-state" id="error-state" style="display:none;" role="alert">
+      <div class="error-icon-wrap" aria-hidden="true">
+        <i data-lucide="wifi-off" width="36" height="36"></i>
+      </div>
+      <h3>Something went wrong</h3>
+      <p id="error-message">Unable to analyze the product right now. Please try again.</p>
+      <button class="btn btn-ghost" onclick="document.getElementById('error-state').style.display='none';document.getElementById('empty-state').style.display='flex';">
+        <i data-lucide="refresh-cw" width="16" height="16"></i>
+        Try Again
+      </button>
+    </div>
+
+    <!-- ── Results Grid (populated by search.js) ── -->
+    <div id="search-results" style="display:none;"></div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+{% endblock %}

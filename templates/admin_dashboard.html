@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Analytics Dashboard — BuyWise AI{% endblock %}
+{% block meta_description %}Platform-wide management and analytics dashboard for BuyWise AI.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-dash-container {
+    padding: var(--space-8) 0 var(--space-16);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .stat-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-extrabold);
+    color: var(--color-primary);
+    margin-top: var(--space-2);
+  }
+
+  .table-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-4);
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-subtle);
+    font-size: var(--text-sm);
+  }
+
+  .data-table th {
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-dash-container">
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8);">
+    <div>
+      <div class="section-label"><i data-lucide="shield" width="14" height="14"></i> System Control Console</div>
+      <h1
+        style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-text-primary);">
+        Admin & Analytics Dashboard
+      </h1>
+    </div>
+
+    <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+      <a href="{{ url_for('admin_data') }}" class="btn btn-ghost">
+        <i data-lucide="database" width="16" height="16"></i> Data &amp; AI Hub
+      </a>
+      <a href="{{ url_for('admin_matching_config') }}" class="btn btn-ghost">
+        <i data-lucide="sliders" width="16" height="16"></i> Matching Config
+      </a>
+      <a href="{{ url_for('search') }}" class="btn btn-ghost">
+        <i data-lucide="search" width="16" height="16"></i> Search App
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span style="color: var(--color-text-secondary); font-size: var(--text-xs); text-transform: uppercase;">Total
+        Products</span>
+      <div class="stat-value" style="color: var(--color-primary);">{{ analytics.total_products }}</div>
+    </div>
+
+    <div class="stat-card">
+      <span style="color: var(--color-text-secondary); font-size: var(--text-xs); text-transform: uppercase;">Total
+        Reviews</span>
+      <div class="stat-value" style="color: var(--color-secondary);">{{ analytics.total_reviews }}</div>
+      <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 4px;">
+        {{ analytics.dataset_reviews }} dataset / {{ analytics.user_reviews }} user
+      </span>
+    </div>
+
+    <div class="stat-card">
+      <span style="color: var(--color-text-secondary); font-size: var(--text-xs); text-transform: uppercase;">AI Reports
+        Synthesized</span>
+      <div class="stat-value" style="color: var(--color-accent-amber);">{{ analytics.ai_reports_generated }}</div>
+    </div>
+
+    <div class="stat-card">
+      <span style="color: var(--color-text-secondary); font-size: var(--text-xs); text-transform: uppercase;">Est. AI
+        Token Spend</span>
+      <div class="stat-value" style="color: var(--color-success); font-size: var(--text-3xl);">${{
+        analytics.ai_usage.estimated_cost_usd }}</div>
+      <span style="font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 4px;">
+        ~{{ analytics.ai_usage.api_calls }} API Calls
+      </span>
+    </div>
+  </div>
+
+  <!-- Most Trusted Products Table -->
+  <div class="table-card">
+    <h3 style="color: var(--color-text-primary); margin-bottom: var(--space-2);">
+      <i data-lucide="award" width="20" height="20" style="color: var(--color-accent-amber);"></i>
+      Most Trusted Platform Products
+    </h3>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Product Name</th>
+          <th>Brand</th>
+          <th>Category</th>
+          <th>Trust Score</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in analytics.trusted_products %}
+        <tr>
+          <td>#{{ p.id }}</td>
+          <td style="font-weight: var(--weight-bold); color: var(--color-text-primary);">{{ p.name }}</td>
+          <td>{{ p.brand }}</td>
+          <td><span class="badge badge-teal">{{ p.category }}</span></td>
+          <td><strong style="color: var(--color-success);">{{ p.trust_score }} / 100</strong></td>
+          <td><a href="/product/{{ p.id }}" class="btn btn-ghost" style="padding: 4px 8px; font-size: 12px;">View</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--color-text-muted);">No products registered yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

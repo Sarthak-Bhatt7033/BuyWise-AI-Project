@@ -1,0 +1,1373 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — AI Buying Report &amp; Trust Score — BuyWise AI{% endblock %}
+{% block meta_description %}AI-powered buying analysis, trust score, specifications, pros & cons, and review
+intelligence for {{ product.name }}.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .product-detail-container {
+    padding: var(--space-8) 0 var(--space-16);
+  }
+
+  .product-header-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    margin-bottom: var(--space-6);
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: var(--space-8);
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    .product-header-card {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .product-meta-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .product-title {
+    font-family: var(--font-display);
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+    line-height: var(--leading-tight);
+  }
+
+  .product-description {
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+  }
+
+  .trust-card {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .trust-badge-large {
+    font-size: var(--text-5xl);
+    font-weight: var(--weight-extrabold);
+    font-family: var(--font-display);
+
+    color: {
+      % if product.trust_score>=75 %
+    }
+
+    var(--color-success) {
+      % elif product.trust_score>=50 %
+    }
+
+    var(--color-warning) {
+      % else %
+    }
+
+    var(--color-error) {
+      % endif %
+    }
+
+    ;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-8);
+  }
+
+  @media (max-width: 900px) {
+    .product-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .detail-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .detail-card-title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .specs-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+    list-style: none;
+    padding: 0;
+  }
+
+  .spec-item {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+  }
+
+  .pro-con-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 600px) {
+    .pro-con-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pros-box,
+  .cons-box {
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .pros-box {
+    border-left: 4px solid var(--color-success);
+  }
+
+  .cons-box {
+    border-left: 4px solid var(--color-error);
+  }
+
+  .pros-box h4 {
+    color: var(--color-success);
+    margin-bottom: var(--space-2);
+  }
+
+  .cons-box h4 {
+    color: var(--color-error);
+    margin-bottom: var(--space-2);
+  }
+
+  .pro-con-list {
+    padding-left: var(--space-4);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+  }
+
+  .pro-con-list li {
+    margin-bottom: var(--space-2);
+  }
+
+  /* Source Transparency Panel */
+  .source-banner {
+    background: var(--color-surface-2);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .source-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  /* Sentiment Bar */
+  .sentiment-bar-wrap {
+    display: flex;
+    height: 12px;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin: var(--space-3) 0 var(--space-2);
+    background: var(--color-surface-3);
+  }
+
+  .sentiment-seg-pos {
+    background: var(--color-success);
+  }
+
+  .sentiment-seg-neu {
+    background: var(--color-accent-amber);
+  }
+
+  .sentiment-seg-neg {
+    background: var(--color-error);
+  }
+
+  /* Modal Overlay & Box */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(8, 11, 20, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+  }
+
+  .modal-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: var(--space-6);
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  #personalized-modal .modal-box {
+    max-width: 840px;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .chat-history {
+    height: 280px;
+    overflow-y: auto;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .chat-msg {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    max-width: 85%;
+    line-height: var(--leading-normal);
+  }
+
+  .chat-msg.user {
+    background: var(--color-primary);
+    color: white;
+    align-self: flex-end;
+  }
+
+  .chat-msg.assistant {
+    background: var(--color-surface-3);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-subtle);
+    align-self: flex-start;
+  }
+
+  .option-chip {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+    font-size: var(--text-xs);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .option-chip.selected {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+  }
+
+  .similar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .similar-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container product-detail-container">
+
+  <!-- Breadcrumb & Top Actions -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+    <a href="/search" class="btn btn-ghost" style="padding: var(--space-2) var(--space-3); font-size: var(--text-sm);">
+      <i data-lucide="arrow-left" width="16" height="16"></i> Back to Search
+    </a>
+
+    <div style="display: flex; gap: var(--space-2); align-items: center;">
+      <!-- Wishlist Action -->
+      <button class="btn btn-ghost" id="wishlist-btn" onclick="toggleProductWishlist()"
+        style="display: flex; align-items: center; gap: 6px;">
+        <i data-lucide="heart" id="wishlist-icon" width="16" height="16"></i>
+        <span id="wishlist-btn-text">Wishlist</span>
+      </button>
+
+      <!-- Compare Action -->
+      <!-- <a href="/compare?ids={{ product.id }}" class="btn btn-ghost"
+        style="display: flex; align-items: center; gap: 6px;">
+        <i data-lucide="columns" width="16" height="16"></i> Compare
+      </a> -->
+    </div>
+  </div>
+
+  <!-- Product Header Card -->
+  <div class="product-header-card">
+    <div>
+      <div class="product-meta-row">
+        <span class="badge badge-teal">{{ product.category }}</span>
+        <span class="badge badge-primary">{{ product.brand }}</span>
+        {% if product.release_year %}
+        <span class="badge badge-outline">{{ product.release_year }}</span>
+        {% endif %}
+        <span class="badge badge-outline" style="text-transform: uppercase;">Source: {{ product.source }}</span>
+        <span id="verdict-pill-header" class="badge badge-primary" style="display: none;"></span>
+      </div>
+
+      <h1 class="product-title">{{ product.name }}</h1>
+      <p class="product-description">{{ product.description }}</p>
+
+      {% if product.price_range %}
+      <div style="font-size: var(--text-2xl); font-weight: var(--weight-extrabold); color: var(--color-secondary);">
+        Estimated Indian Price: {{ product.price_range }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="trust-card">
+      <div
+        style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wider); color: var(--color-text-muted); margin-bottom: var(--space-1);">
+        AI Trust Score
+      </div>
+      <div class="trust-badge-large">{{ product.trust_score }}</div>
+      <div style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-top: var(--space-2);">
+        Out of 100
+      </div>
+      <div id="verdict-label-box"
+        style="margin-top: var(--space-2); font-size: var(--text-xs); font-weight: bold; color: var(--color-primary);">
+        Analyzing Verdict…
+      </div>
+    </div>
+  </div>
+
+  <!-- Obsolescence / Do Not Buy Alert Banner -->
+  {% if product.is_discontinued or product.trust_score < 50 or 'Discontinued' in (product.lifecycle_status or '' )
+    or 'Obsolete' in (product.lifecycle_status or '' ) or 'Do Not Buy' in (product.buy_recommendation or '' ) %} <div
+    style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-left: 5px solid var(--color-error); border-radius: var(--radius-md); padding: var(--space-4) var(--space-6); margin-bottom: var(--space-6);">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2);">
+      <div
+        style="color: var(--color-error); font-weight: bold; font-size: var(--text-base); display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="alert-triangle" width="18" height="18"></i>
+        {{ product.buy_recommendation or 'Do Not Buy — Obsolete / Overpriced Device' }}
+      </div>
+      <span class="badge"
+        style="background: rgba(239,68,68,0.2); color: var(--color-error); border: 1px solid rgba(239,68,68,0.4); font-size: 11px;">
+        {{ product.lifecycle_status or 'Discontinued & Obsolete' }}
+      </span>
+    </div>
+    <p
+      style="color: var(--color-text-secondary); font-size: var(--text-sm); line-height: var(--leading-relaxed); margin: 0;">
+      <strong>Real-World Market &amp; Price Verdict:</strong>
+      {{ product.price_justification or 'This product is outdated or discontinued with no official software/security
+      patches. Spending this amount in today’s Indian market is not justified when modern 5G devices exist in this price
+      range.' }}
+    </p>
+
+    {% if product.better_alternatives %}
+    <div
+      style="margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px dashed rgba(239, 68, 68, 0.3);">
+      <div
+        style="font-size: var(--text-xs); font-weight: bold; text-transform: uppercase; color: var(--color-secondary); margin-bottom: var(--space-2); display: flex; align-items: center; gap: 6px;">
+        <i data-lucide="sparkles" width="14" height="14"></i>
+        Recommended Modern Alternatives in this Price Range:
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3);">
+        {% for alt in product.better_alternatives %}
+        <div
+          style="background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3);">
+          <div style="font-size: var(--text-sm); font-weight: bold; color: var(--color-text-primary);">{{ alt.name }}
+          </div>
+          <div style="font-size: var(--text-xs); font-weight: bold; color: var(--color-secondary); margin-bottom: 4px;">
+            {{ alt.price_range }}</div>
+          <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 6px;">{{
+            alt.advantage }}</div>
+          <a href="/search?q={{ alt.name | urlencode }}" class="btn btn-ghost"
+            style="padding: 2px 6px; font-size: 11px; color: var(--color-primary);">
+            Search this model →
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Source Ingestion Transparency Banner -->
+<div class="source-banner">
+  <div
+    style="font-weight: bold; font-size: var(--text-xs); color: var(--color-text-primary); text-transform: uppercase;">
+    <i data-lucide="layers" width="14" height="14" style="color: var(--color-primary); vertical-align: middle;"></i>
+    Data Sources Active:
+  </div>
+  <div class="source-item">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-success);"></span>
+    Kaggle Dataset Reviews Included
+  </div>
+  <div class="source-item">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary);"></span>
+    Community User Reviews Included
+  </div>
+  <div class="source-item">
+    <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent-amber);"></span>
+    AI Knowledge Fallback Ready
+  </div>
+</div>
+
+<!-- Product Main Grid -->
+<div class="product-grid">
+  <div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+           AI BUYING REPORT SECTION (BRD §6.9)
+           ════════════════════════════════════════════════════════════════════ -->
+    <div class="detail-card" id="ai-buying-report-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+        <h3 class="detail-card-title" style="margin: 0;">
+          <i data-lucide="sparkles" width="20" height="20" style="color: var(--color-primary);"></i>
+          BuyWise AI Buying Report
+        </h3>
+        <span class="badge badge-primary" style="font-size: 10px;">GPT-4o Synthesized</span>
+      </div>
+
+      <div id="report-loading-state"
+        style="padding: var(--space-4); color: var(--color-text-muted); font-size: var(--text-sm);">
+        <div class="spinner" style="width: 14px; height: 14px; display: inline-block; margin-right: 6px;"></div>
+        Synthesizing real-time buying intelligence &amp; review sentiment…
+      </div>
+
+      <div id="report-content-state" style="display: none;">
+        <!-- Executive Summary -->
+        <div
+          style="background: var(--color-surface-2); border-left: 4px solid var(--color-primary); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+          <div
+            style="font-size: var(--text-xs); font-weight: bold; color: var(--color-primary); text-transform: uppercase; margin-bottom: 4px;">
+            Executive AI Summary
+          </div>
+          <p id="report-summary-text"
+            style="color: var(--color-text-primary); font-size: var(--text-sm); line-height: var(--leading-relaxed); margin: 0;">
+          </p>
+        </div>
+
+        <!-- Verdict & Value for money -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+          <div
+            style="background: var(--color-surface-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);">
+            <div style="font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase;">Verdict
+            </div>
+            <div id="report-verdict-text"
+              style="font-weight: bold; color: var(--color-success); font-size: var(--text-base); margin-top: 2px;">
+            </div>
+          </div>
+          <div
+            style="background: var(--color-surface-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);">
+            <div style="font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase;">Value For
+              Money Score</div>
+            <div id="report-vfm-score"
+              style="font-weight: bold; color: var(--color-secondary); font-size: var(--text-base); margin-top: 2px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Critical Issues / Caveats -->
+        <div id="report-issues-box" style="margin-bottom: var(--space-4); display: none;">
+          <div
+            style="font-size: var(--text-xs); font-weight: bold; color: var(--color-warning); text-transform: uppercase; margin-bottom: var(--space-2);">
+            <i data-lucide="alert-triangle" width="14" height="14" style="vertical-align: middle;"></i> Frequently
+            Mentioned Consumer Issues
+          </div>
+          <ul id="report-issues-list"
+            style="padding-left: 20px; color: var(--color-text-secondary); font-size: var(--text-sm); margin: 0;"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Specifications & Features -->
+    <div class="detail-card">
+      <h3 class="detail-card-title">
+        <i data-lucide="sliders" width="20" height="20" style="color: var(--color-primary);"></i>
+        Specifications &amp; Features
+      </h3>
+      <ul class="specs-list">
+        {% for spec in product.specs %}
+        <li class="spec-item">{{ spec }}</li>
+        {% else %}
+        <li class="spec-item">Standard Indian market technical specifications</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Pros & Cons -->
+    <div class="detail-card">
+      <h3 class="detail-card-title">
+        <i data-lucide="thumbs-up" width="20" height="20" style="color: var(--color-secondary);"></i>
+        Pros &amp; Cons Overview
+      </h3>
+      <div class="pro-con-grid">
+        <div class="pros-box">
+          <h4>Pros</h4>
+          <ul class="pro-con-list">
+            {% for pro in product.pros %}
+            <li>{{ pro }}</li>
+            {% else %}
+            <li>Solid performance and build quality</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="cons-box">
+          <h4>Cons</h4>
+          <ul class="pro-con-list">
+            {% for con in product.cons %}
+            <li>{{ con }}</li>
+            {% else %}
+            <li>Premium pricing in certain variants</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews & Opinions Pool (BRD §6.4, §6.5) -->
+    <div class="detail-card" id="reviews-section">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+        <h3 class="detail-card-title" style="margin-bottom: 0;">
+          <i data-lucide="message-square" width="20" height="20" style="color: var(--color-primary);"></i>
+          Reviews &amp; Opinions
+          <span
+            style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: normal; margin-left: 6px;">
+            ({{ reviews | length }} reviews from all sources)
+          </span>
+        </h3>
+        <button class="btn btn-primary" onclick="toggleReviewForm()">
+          <i data-lucide="edit-3" width="16" height="16"></i> Write a Review
+        </button>
+      </div>
+
+      <!-- Source Legend -->
+      <div
+        style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: var(--space-4); padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-md);">
+        <span
+          style="font-size: var(--text-xs); color: var(--color-text-muted); font-weight: 600; align-self: center;">Sources:</span>
+        <span class="badge badge-teal" style="font-size: 10px;"><i data-lucide="user" width="11" height="11"></i>
+          BuyWise Community</span>
+        <span class="badge badge-primary" style="font-size: 10px;"><i data-lucide="database" width="11" height="11"></i>
+          Kaggle / CSV Dataset</span>
+        <span class="badge badge-amber" style="font-size: 10px;"><i data-lucide="bot" width="11" height="11"></i>
+          AI-Synthesized (OpenAI)</span>
+      </div>
+
+      <!-- Write Review Form -->
+      <div id="review-form-wrapper"
+        style="display: none; background: var(--color-surface-2); padding: var(--space-6); border-radius: var(--radius-md); margin-bottom: var(--space-6); border: 1px solid var(--color-border);">
+        <h4 style="color: var(--color-text-primary); margin-bottom: var(--space-3);">Write a Product Review</h4>
+        <form id="review-submit-form">
+          <div style="margin-bottom: var(--space-4);">
+            <label
+              style="display: block; color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-2);">Star
+              Rating</label>
+            <select id="review-rating" class="search-input"
+              style="padding: var(--space-2) var(--space-3); width: 140px;">
+              <option value="5">⭐⭐⭐⭐⭐ (5.0)</option>
+              <option value="4">⭐⭐⭐⭐ (4.0)</option>
+              <option value="3">⭐⭐⭐ (3.0)</option>
+              <option value="2">⭐⭐ (2.0)</option>
+              <option value="1">⭐ (1.0)</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: var(--space-4);">
+            <label
+              style="display: block; color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-2);">Review
+              Text</label>
+            <textarea id="review-text" rows="3" class="search-input" style="width: 100%; padding: var(--space-3);"
+              placeholder="Share your hands-on experience with this product… (min 10 characters)" required
+              minlength="10"></textarea>
+          </div>
+
+          <div style="display: flex; gap: var(--space-3); justify-content: flex-end;">
+            <button type="button" class="btn btn-ghost" onclick="toggleReviewForm()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submit-review-btn">Submit Review</button>
+          </div>
+        </form>
+        <div id="review-msg" style="margin-top: var(--space-3); font-size: var(--text-sm);"></div>
+      </div>
+
+      <!-- Reviews Pool Display -->
+      <div id="reviews-list">
+        {% for r in reviews %}
+        <div
+          style="background: var(--color-surface-2); border: 1px solid {% if r.is_suspicious %}var(--color-warning){% else %}var(--color-border-subtle){% endif %}; border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-3);">
+          <!-- Review Header -->
+          <div
+            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2); flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <!-- Reviewer Avatar -->
+              <div
+                style="width: 32px; height: 32px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #fff; flex-shrink: 0;">
+                {{ (r.user_name or 'V')[0] | upper }}
+              </div>
+              <div>
+                <strong style="color: var(--color-text-primary); font-size: var(--text-sm);">
+                  {% if r.user_name %}
+                  {{ r.user_name }}
+                  {% elif r.source == 'dataset' %}
+                  Verified Dataset Buyer
+                  {% else %}
+                  Verified Buyer
+                  {% endif %}
+                </strong>
+                {% if r.source == 'ai' and r.platform %}
+                <div style="font-size: 10px; color: var(--color-text-muted);">via {{ r.platform }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Rating & Badges -->
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <span style="color: var(--color-accent-amber); font-weight: bold; font-size: var(--text-sm);">★ {{
+                "%.1f"|format(r.rating|float) }}</span>
+              {% if r.sentiment %}
+              <span
+                class="badge {% if r.sentiment == 'Positive' %}badge-teal{% elif r.sentiment == 'Negative' %}badge-outline{% else %}badge-primary{% endif %}"
+                style="font-size: 10px;">
+                {{ r.sentiment }}
+              </span>
+              {% endif %}
+              {% if r.source == 'user' %}
+              <span class="badge badge-teal" style="font-size: 10px;"><i data-lucide="user" width="11" height="11"></i>
+                Community</span>
+              {% elif r.source == 'dataset' %}
+              <span class="badge badge-primary" style="font-size: 10px;"><i data-lucide="database" width="11"
+                  height="11"></i> Dataset</span>
+              {% else %}
+              <span class="badge badge-amber" style="font-size: 10px;"
+                title="{{ r.source_label or 'AI-synthesized review' }}"><i data-lucide="bot" width="11" height="11"></i>
+                AI</span>
+              {% endif %}
+              {% if r.verified %}
+              <span class="badge"
+                style="font-size: 10px; background: rgba(16,185,129,0.1); color: var(--color-success); border: 1px solid rgba(16,185,129,0.2);">✓
+                Verified</span>
+              {% endif %}
+              {% if r.is_suspicious %}
+              <span class="badge"
+                style="font-size: 10px; background: rgba(245,158,11,0.1); color: var(--color-warning);"
+                title="This review was flagged by our fake review detector">⚠ Flagged</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Review Text -->
+          <p
+            style="color: var(--color-text-secondary); font-size: var(--text-sm); margin: 0; line-height: var(--leading-relaxed);">
+            {{ r.review_text }}
+          </p>
+
+          <!-- Source Transparency Footer -->
+          {% if r.source_label %}
+          <div
+            style="margin-top: var(--space-2); font-size: 10px; color: var(--color-text-muted); border-top: 1px solid var(--color-border-subtle); padding-top: 6px;">
+            <i data-lucide="info" width="11" height="11" style="vertical-align: middle;"></i>
+            {{ r.source_label }}
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">
+          No reviews available for this product yet. Be the first to submit one above!
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Sidebar: Intelligence & Actions -->
+  <div>
+
+    <!-- Sentiment & Trust Score Breakdown (BRD §6.6 & §6.8) -->
+    <div class="detail-card">
+      <h3 class="detail-card-title">
+        <i data-lucide="pie-chart" width="20" height="20" style="color: var(--color-primary);"></i>
+        Sentiment &amp; Trust Formula
+      </h3>
+
+      <div id="sentiment-stats-box">
+        <div
+          style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--color-text-secondary);">
+          <span>Positive: <strong id="sent-pos-val" style="color:var(--color-success)">--%</strong></span>
+          <span>Neutral: <strong id="sent-neu-val" style="color:var(--color-accent-amber)">--%</strong></span>
+          <span>Negative: <strong id="sent-neg-val" style="color:var(--color-error)">--%</strong></span>
+        </div>
+        <div class="sentiment-bar-wrap">
+          <div class="sentiment-seg-pos" id="sent-bar-pos" style="width: 75%;"></div>
+          <div class="sentiment-seg-neu" id="sent-bar-neu" style="width: 15%;"></div>
+          <div class="sentiment-seg-neg" id="sent-bar-neg" style="width: 10%;"></div>
+        </div>
+      </div>
+
+      <div
+        style="margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--color-border-subtle); font-size: var(--text-xs); color: var(--color-text-secondary);">
+        <div style="font-weight: bold; color: var(--color-text-primary); margin-bottom: 4px;">Formula Weight Breakdown:
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Positive Sentiment
+            Ratio:</span><strong>40%</strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Star Rating
+            Factor:</span><strong>30%</strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Spam Penalty
+            Cleanliness:</span><strong>20%</strong></div>
+        <div style="display: flex; justify-content: space-between; padding: 2px 0;"><span>Verified Purchase
+            Bonus:</span><strong>10%</strong></div>
+      </div>
+    </div>
+
+    <!-- Best Suited For Card -->
+    <div class="detail-card">
+      <h3 class="detail-card-title">
+        <i data-lucide="target" width="20" height="20" style="color: var(--color-accent-amber);"></i>
+        Target Audience
+      </h3>
+      <p
+        style="color: var(--color-text-secondary); font-size: var(--text-sm); line-height: var(--leading-relaxed); margin-bottom: var(--space-3);">
+        <strong
+          style="color: var(--color-success); font-size: var(--text-xs); text-transform: uppercase; display: block; margin-bottom: 2px;">Best
+          For:</strong>
+        <span id="best-for-text">{{ product.best_for or "Users seeking dependable quality and value in this category."
+          }}</span>
+      </p>
+      <p id="not-for-box"
+        style="color: var(--color-text-secondary); font-size: var(--text-sm); line-height: var(--leading-relaxed); display: none;">
+        <strong
+          style="color: var(--color-error); font-size: var(--text-xs); text-transform: uppercase; display: block; margin-bottom: 2px;">Skip
+          If:</strong>
+        <span id="not-for-text"></span>
+      </p>
+    </div>
+
+    <!-- Decision Tools Card -->
+    <div class="detail-card">
+      <h3 class="detail-card-title">AI Decision Tools</h3>
+      <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+
+        <!-- RAG AI Chat Assistant -->
+        <button class="btn btn-primary" onclick="openChatModal()" style="width: 100%; justify-content: center;">
+          <i data-lucide="bot" width="16" height="16"></i> Ask AI Chat Assistant
+        </button>
+
+        <!-- Personalized Buying Assistant -->
+        <button class="btn btn-secondary" onclick="openPersonalizedModal()"
+          style="width: 100%; justify-content: center; background: var(--color-secondary); color: var(--color-text-inverse);">
+          <i data-lucide="sparkles" width="16" height="16"></i> Personalized Assistant
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Similar Products Section -->
+<div style="margin-top: var(--space-8);">
+  <h3
+    style="font-family: var(--font-display); color: var(--color-text-primary); margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px;">
+    <i data-lucide="grid" width="20" height="20" style="color: var(--color-primary);"></i>
+    Similar Products in {{ product.category }}
+  </h3>
+  <div id="similar-products-grid" class="similar-grid">
+    <div style="color: var(--color-text-muted); font-size: var(--text-sm);">Loading similar products…</div>
+  </div>
+</div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     MODAL 1: AI CHAT ASSISTANT
+     ════════════════════════════════════════════════════════════════════ -->
+<div id="chat-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+      <h3 style="color: var(--color-text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="bot" width="20" height="20" style="color: var(--color-primary);"></i>
+        AI Chat Assistant — {{ product.name }}
+      </h3>
+      <button class="btn btn-ghost" onclick="closeChatModal()" style="padding: 4px 8px;">✕</button>
+    </div>
+
+    <div class="chat-history" id="chat-history-box">
+      <div class="chat-msg assistant">
+        Hello! Ask me any questions about {{ product.name }} (e.g. "Is the battery life good?", "How does it perform for
+        gaming?", "Is it worth the price in India?").
+      </div>
+    </div>
+
+    <form id="chat-form" style="display: flex; gap: var(--space-2);">
+      <input type="text" id="chat-input" class="search-input"
+        placeholder="Type your question about specs, reliability, or value…" required style="flex: 1;">
+      <button type="submit" class="btn btn-primary" id="chat-send-btn">Ask AI</button>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     MODAL 2: AI PERSONALIZED BUYING ASSISTANT
+     ════════════════════════════════════════════════════════════════════ -->
+<div id="personalized-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+      <h3 style="color: var(--color-text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="sparkles" width="20" height="20" style="color: var(--color-secondary);"></i>
+        Personalized Buying Recommendation
+      </h3>
+      <button class="btn btn-ghost" onclick="closePersonalizedModal()" style="padding: 4px 8px;">✕</button>
+    </div>
+
+    <!-- Progress bar row -->
+    <div id="personalized-progress-row" style="margin-bottom: var(--space-4); display: none;">
+      <div
+        style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: 6px;">
+        <span id="progress-label">Answered 0 of 10 questions</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div style="height: 5px; background: var(--color-surface-2); border-radius: 99px; overflow: hidden;">
+        <div id="progress-bar-fill"
+          style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); border-radius: 99px; transition: width 0.35s ease;">
+        </div>
+      </div>
+    </div>
+
+    <div id="personalized-step-1">
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-4);">
+        Answer all <strong>10 AI-generated questions</strong> tailored specifically to
+        <strong>{{ product.name }}</strong> and your category to get a precise, honest buying verdict:
+      </p>
+      <div id="dynamic-questions-container">
+        <div
+          style="display:flex; align-items:center; gap:10px; color:var(--color-text-muted); font-size:var(--text-sm); padding: var(--space-6) 0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="animation:spin 1s linear infinite;">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--color-primary)" />
+          </svg>
+          Generating 10 personalised AI questions for {{ product.category }}…
+        </div>
+      </div>
+      <div id="personalized-unanswered-warning"
+        style="display:none; color:var(--color-error); font-size:var(--text-xs); margin-top:var(--space-3); padding: var(--space-2) var(--space-3); background:rgba(239,68,68,0.08); border-radius:var(--radius-sm); border-left:3px solid var(--color-error);">
+        ⚠ Please answer all questions before synthesising your recommendation.
+      </div>
+      <div style="margin-top: var(--space-4); display:flex; justify-content:space-between; align-items:center;">
+        <span id="personalized-answered-count" style="font-size:var(--text-xs); color:var(--color-text-muted);"></span>
+        <button class="btn btn-secondary" onclick="submitPersonalizedAnswers()" id="personalized-submit-btn"
+          style="background: var(--color-secondary); color: var(--color-text-inverse);">
+          <i data-lucide="sparkles" width="15" height="15" style="vertical-align:middle; margin-right:4px;"></i>
+          Synthesize My Recommendation
+        </button>
+      </div>
+    </div>
+
+    <div id="personalized-step-2" style="display: none;">
+      <!-- Results populated via JS -->
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const currentProductId = {{ product.id }};
+  let chatHistory = [];
+  let userAnswers = {};
+
+  /* ── Wishlist Toggle ── */
+  async function toggleProductWishlist() {
+    const icon = document.getElementById('wishlist-icon');
+    const text = document.getElementById('wishlist-btn-text');
+    try {
+      const res = await fetch('/api/user/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: currentProductId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const added = data.result?.added;
+        if (added) {
+          text.textContent = 'Saved!';
+          icon.style.color = 'var(--color-accent-rose)';
+        } else {
+          text.textContent = 'Wishlist';
+          icon.style.color = 'inherit';
+        }
+      }
+    } catch (err) {
+      alert('Please log in to add products to your wishlist.');
+    }
+  }
+
+  /* ── Fetch AI Buying Report ── */
+  async function loadBuyingReport() {
+    try {
+      const res = await fetch(`/api/report/${currentProductId}`);
+      const data = await res.json();
+      const report = data.report || {};
+      const buyingReport = report.buying_report || {};
+      const sentimentStats = report.sentiment_stats || {};
+
+      // Populate Report Card
+      document.getElementById('report-loading-state').style.display = 'none';
+      document.getElementById('report-content-state').style.display = 'block';
+
+      document.getElementById('report-summary-text').textContent = buyingReport.summary || 'Solid overall product in this segment.';
+      document.getElementById('report-verdict-text').textContent = report.verdict || buyingReport.verdict || 'Recommended';
+      document.getElementById('report-vfm-score').textContent = (buyingReport.value_for_money_score || 80) + ' / 100';
+
+      // Issues
+      const issues = buyingReport.frequently_mentioned_issues || [];
+      if (issues.length > 0) {
+        document.getElementById('report-issues-box').style.display = 'block';
+        document.getElementById('report-issues-list').innerHTML = issues.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+      }
+
+      // Best For / Not For
+      if (buyingReport.best_for) {
+        document.getElementById('best-for-text').textContent = buyingReport.best_for;
+      }
+      if (buyingReport.not_for) {
+        document.getElementById('not-for-box').style.display = 'block';
+        document.getElementById('not-for-text').textContent = buyingReport.not_for;
+      }
+
+      // Sentiment Bars
+      const pos = Math.round(sentimentStats.positive_pct || 70);
+      const neu = Math.round(sentimentStats.neutral_pct || 20);
+      const neg = Math.round(sentimentStats.negative_pct || 10);
+
+      document.getElementById('sent-pos-val').textContent = pos + '%';
+      document.getElementById('sent-neu-val').textContent = neu + '%';
+      document.getElementById('sent-neg-val').textContent = neg + '%';
+
+      document.getElementById('sent-bar-pos').style.width = pos + '%';
+      document.getElementById('sent-bar-neu').style.width = neu + '%';
+      document.getElementById('sent-bar-neg').style.width = neg + '%';
+
+      // Verdict label in trust card
+      const verdict = report.verdict || 'Recommended';
+      document.getElementById('verdict-label-box').textContent = 'Verdict: ' + verdict;
+      const vPill = document.getElementById('verdict-pill-header');
+      vPill.style.display = 'inline-block';
+      vPill.textContent = verdict;
+
+    } catch (err) {
+      document.getElementById('report-loading-state').innerHTML = `<span style="color:var(--color-text-muted);">AI report generated with cached specs.</span>`;
+    }
+  }
+
+  /* ── Review Submission ── */
+  function toggleReviewForm() {
+    const form = document.getElementById('review-form-wrapper');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  }
+
+  document.getElementById('review-submit-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const text = document.getElementById('review-text').value.trim();
+    const rating = document.getElementById('review-rating').value;
+    const msg = document.getElementById('review-msg');
+    const btn = document.getElementById('submit-review-btn');
+
+    if (text.length < 10) {
+      msg.textContent = 'Review text must be at least 10 characters.';
+      msg.style.color = 'var(--color-error)';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: currentProductId,
+          review_text: text,
+          rating: rating
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        msg.textContent = 'Review submitted successfully!';
+        msg.style.color = 'var(--color-success)';
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        msg.textContent = 'Error: ' + (data.error || 'Failed to submit review.');
+        msg.style.color = 'var(--color-error)';
+        btn.disabled = false;
+        btn.textContent = 'Submit Review';
+      }
+    } catch (err) {
+      msg.textContent = 'Failed to submit review: ' + err.message;
+      msg.style.color = 'var(--color-error)';
+      btn.disabled = false;
+      btn.textContent = 'Submit Review';
+    }
+  });
+
+  /* ── AI Chat Assistant ── */
+  function openChatModal() { document.getElementById('chat-modal').style.display = 'flex'; }
+  function closeChatModal() { document.getElementById('chat-modal').style.display = 'none'; }
+
+  document.getElementById('chat-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const q = input.value.trim();
+    if (!q) return;
+
+    const box = document.getElementById('chat-history-box');
+    box.innerHTML += `<div class="chat-msg user">${escapeHtml(q)}</div>`;
+    input.value = '';
+    box.scrollTop = box.scrollHeight;
+
+    const btn = document.getElementById('chat-send-btn');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: currentProductId, question: q, history: chatHistory })
+      });
+      const data = await res.json();
+      const ans = data.answer || 'No response received.';
+      box.innerHTML += `<div class="chat-msg assistant">${escapeHtml(ans)}</div>`;
+      chatHistory.push({ role: 'user', content: q }, { role: 'assistant', content: ans });
+      box.scrollTop = box.scrollHeight;
+    } catch (err) {
+      box.innerHTML += `<div class="chat-msg assistant" style="color:var(--color-error);">Error: ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ── Personalized Assistant ── */
+  let totalQuestions = 0;
+  async function openPersonalizedModal() {
+    userAnswers = {};
+    totalQuestions = 0;
+    document.getElementById('personalized-modal').style.display = 'flex';
+    document.getElementById('personalized-step-1').style.display = 'block';
+    document.getElementById('personalized-step-2').style.display = 'none';
+    document.getElementById('personalized-progress-row').style.display = 'block';
+    document.getElementById('personalized-unanswered-warning').style.display = 'none';
+    updateProgress();
+
+    const container = document.getElementById('dynamic-questions-container');
+
+    try {
+      const res = await fetch(`/api/personalized/questions/${currentProductId}`);
+      const data = await res.json();
+      const questions = data.questions || [];
+      totalQuestions = questions.length;
+
+      if (!questions.length) {
+        container.innerHTML = `<div style="color:var(--color-error);">No questions generated. Please try again.</div>`;
+        return;
+      }
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      container.innerHTML = questions.map((q, idx) => `
+      <div class="pq-block" id="pq-block-${q.id}" style="margin-bottom: var(--space-5); padding: var(--space-4); background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-md); transition: border-color 0.2s;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:var(--space-2);">
+          <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-primary); background:rgba(108,99,255,0.1); padding:2px 8px; border-radius:99px;">${escapeHtml(q.aspect || 'Question')}</span>
+          <span style="font-size:11px; color:var(--color-text-muted);">Q${idx + 1} of ${questions.length}</span>
+        </div>
+        <label style="display:block; color:var(--color-text-primary); font-size:var(--text-sm); font-weight:600; margin-bottom:var(--space-3); line-height:1.5;">
+          ${escapeHtml(q.question)}
+        </label>
+        <div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
+          ${(q.options || []).map(opt => `
+            <button type="button" class="option-chip" data-qid="${q.id}" onclick="selectOption('${q.id}', this.dataset.val, this)" data-val="${escapeHtml(opt)}">
+              ${escapeHtml(opt)}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+      updateProgress();
+    } catch (err) {
+      container.innerHTML = `<div style="color:var(--color-error);">Failed to load AI questions: ${err.message}</div>`;
+    }
+  }
+
+  function selectOption(qId, val, btnEl) {
+    userAnswers[qId] = val;
+    btnEl.closest('.pq-block').querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+    btnEl.classList.add('selected');
+    btnEl.closest('.pq-block').style.borderColor = 'var(--color-primary)';
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const answered = Object.keys(userAnswers).length;
+    const total = totalQuestions || 10;
+    const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+    const lbl = document.getElementById('progress-label');
+    const pctEl = document.getElementById('progress-pct');
+    const bar = document.getElementById('progress-bar-fill');
+    const cnt = document.getElementById('personalized-answered-count');
+    if (lbl) lbl.textContent = `Answered ${answered} of ${total} questions`;
+    if (pctEl) pctEl.textContent = `${pct}%`;
+    if (bar) bar.style.width = `${pct}%`;
+    if (cnt) cnt.textContent = answered < total ? `${total - answered} remaining` : 'All answered ✓';
+  }
+
+  async function submitPersonalizedAnswers() {
+    const step1 = document.getElementById('personalized-step-1');
+    const step2 = document.getElementById('personalized-step-2');
+    const submitBtn = document.getElementById('personalized-submit-btn');
+    const warning = document.getElementById('personalized-unanswered-warning');
+
+    const answered = Object.keys(userAnswers).length;
+    if (answered < totalQuestions && totalQuestions > 0) {
+      warning.style.display = 'block';
+      return;
+    }
+    warning.style.display = 'none';
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite; vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"/></svg> Synthesising…';
+
+    try {
+      const res = await fetch('/api/personalized/recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: currentProductId, answers: userAnswers })
+      });
+      const data = await res.json();
+
+      if (!data.success && data.error) {
+        alert('Error: ' + data.error);
+        return;
+      }
+
+      const rec = data.recommendation || {};
+      const matchPct = parseInt(rec.match_percentage) || 0;
+      const matchColor = matchPct >= 80 ? 'var(--color-success)' : matchPct >= 60 ? 'var(--color-accent-amber)' : 'var(--color-error)';
+      const matchLabel = rec.match_level || (matchPct >= 80 ? 'Great Match for Your Needs' : matchPct >= 60 ? 'Partial Match — Some Trade-offs' : 'Poor Fit — Consider Alternatives');
+
+      const alts = rec.better_alternative_recommendations || [];
+
+      step1.style.display = 'none';
+      document.getElementById('personalized-progress-row').style.display = 'none';
+      step2.style.display = 'block';
+      step2.innerHTML = `
+      <!-- Match Score Header -->
+      <div style="text-align:center; margin-bottom:var(--space-5); padding: var(--space-5) var(--space-4); background:var(--color-surface-2); border-radius:var(--radius-lg); border:1px solid var(--color-border);">
+        <div style="font-size:3.5rem; font-weight:900; color:${matchColor}; font-family:var(--font-display); line-height:1;">${matchPct}%</div>
+        <div style="font-size:var(--text-sm); font-weight:600; color:${matchColor}; margin-top:4px;">${escapeHtml(matchLabel)}</div>
+        <div style="font-size:var(--text-xs); color:var(--color-text-muted); margin-top:2px;">Personalised across your 10 stated preferences</div>
+      </div>
+
+      <!-- Personalised Verdict -->
+      <div style="padding:var(--space-4); background:rgba(108,99,255,0.05); border-left:4px solid var(--color-primary); border-radius:var(--radius-md); margin-bottom:var(--space-4); font-size:var(--text-sm); color:var(--color-text-primary); line-height:1.7;">
+        ${escapeHtml(rec.personalized_verdict || '')}
+      </div>
+
+      <!-- Why It Fits -->
+      ${(rec.why_it_fits || []).length ? `
+      <div style="margin-bottom:var(--space-4);">
+        <div style="font-size:var(--text-xs); font-weight:700; text-transform:uppercase; color:var(--color-success); letter-spacing:0.06em; margin-bottom:var(--space-2);">✓ Why it fits your profile</div>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
+          ${(rec.why_it_fits || []).map(r => `
+            <li style="display:flex; align-items:flex-start; gap:8px; font-size:var(--text-sm); color:var(--color-text-secondary);">
+              <span style="color:var(--color-success); margin-top:2px; flex-shrink:0;">●</span>${escapeHtml(r)}
+            </li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <!-- Potential Drawbacks -->
+      ${(rec.potential_drawbacks_for_user || []).length ? `
+      <div style="margin-bottom:var(--space-5);">
+        <div style="font-size:var(--text-xs); font-weight:700; text-transform:uppercase; color:var(--color-accent-amber); letter-spacing:0.06em; margin-bottom:var(--space-2);">⚠ Potential trade-offs for you</div>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
+          ${(rec.potential_drawbacks_for_user || []).map(d => `
+            <li style="display:flex; align-items:flex-start; gap:8px; font-size:var(--text-sm); color:var(--color-text-secondary);">
+              <span style="color:var(--color-accent-amber); margin-top:2px; flex-shrink:0;">●</span>${escapeHtml(d)}
+            </li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <!-- Better Alternatives for You -->
+      ${alts.length ? `
+      <div style="border-top:1px dashed var(--color-border); padding-top:var(--space-4); margin-bottom:var(--space-4);">
+        <div style="font-size:var(--text-xs); font-weight:700; text-transform:uppercase; color:var(--color-secondary); letter-spacing:0.06em; margin-bottom:var(--space-3); display:flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Better Alternatives Matching Your Profile:
+        </div>
+        <div style="display:flex; flex-direction:column; gap:var(--space-3);">
+          ${alts.map(alt => `
+            <div style="background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-3); display:flex; gap:var(--space-3);">
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-2); margin-bottom:4px;">
+                  <span style="font-size:var(--text-sm); font-weight:700; color:var(--color-text-primary);">${escapeHtml(alt.name || '')}</span>
+                  <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(52,211,153,0.12); color:var(--color-success);">${alt.match_percentage || ''}% Match</span>
+                </div>
+                <div style="font-size:var(--text-xs); font-weight:600; color:var(--color-secondary); margin-bottom:4px;">${escapeHtml(alt.price_range || '')}</div>
+                <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:4px; line-height:1.5;">${escapeHtml(alt.why_recommended_for_you || '')}</div>
+                <div style="font-size:11px; color:var(--color-success);">${escapeHtml(alt.key_advantage || '')}</div>
+              </div>
+              <div style="flex-shrink:0;">
+                <button type="button" onclick="window.location.href='/search?q='+encodeURIComponent('${escapeHtml(alt.name)}');" style="padding:4px 10px; font-size:11px; border-radius:var(--radius-sm); border:1px solid var(--color-primary); color:var(--color-primary); background:transparent; cursor:pointer; white-space:nowrap;">Search →</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <div style="text-align:right; margin-top:var(--space-3);">
+        <button class="btn btn-ghost" onclick="closePersonalizedModal()">Close</button>
+      </div>
+    `;
+    } catch (err) {
+      alert('Failed to generate personalized recommendation: ' + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i data-lucide="sparkles" width="15" height="15" style="vertical-align:middle; margin-right:4px;"></i> Synthesize My Recommendation';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  }
+  function closePersonalizedModal() {
+    document.getElementById('personalized-modal').style.display = 'none';
+    document.getElementById('personalized-step-1').style.display = 'block';
+    document.getElementById('personalized-step-2').style.display = 'none';
+    document.getElementById('personalized-progress-row').style.display = 'none';
+  }
+
+  /* ── Similar Products Grid (category-only matches) ── */
+  async function loadSimilarProducts() {
+    const grid = document.getElementById('similar-products-grid');
+    try {
+      const res = await fetch(`/api/similar/${currentProductId}`);
+      const data = await res.json();
+      const prods = data.similar_products || [];
+
+      if (!prods.length) {
+        grid.innerHTML = `<div style="color:var(--color-text-muted); font-size:var(--text-sm); padding: var(--space-4); text-align: center;">
+        <i data-lucide="search" width="24" height="24" style="color:var(--color-text-muted); display:block; margin: 0 auto 8px;"></i>
+        No other products found in the <strong>${escapeHtml(data.category || 'same category')}</strong> category yet.
+        Try searching for alternatives above.
+      </div>`;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+      }
+
+      grid.innerHTML = prods.map(p => `
+      <div class="similar-card">
+        <div>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+            <span class="badge badge-teal" style="font-size:10px;">${escapeHtml(p.category || '')}</span>
+            ${p.brand ? `<span class="badge badge-outline" style="font-size:10px;">${escapeHtml(p.brand)}</span>` : ''}
+            ${p.source === 'ai_recommendation' ? `<span style="font-size:9px; font-weight:700; padding:2px 6px; border-radius:99px; background:rgba(168,85,247,0.15); color:#a855f7;">✨ AI Recommended</span>` : ''}
+          </div>
+          <h4 style="color:var(--color-text-primary); font-size:var(--text-base); margin:0 0 4px 0; line-height:1.3;">${escapeHtml(p.name)}</h4>
+          ${p.price_range ? `<div style="font-size:var(--text-xs); color:var(--color-secondary); font-weight:bold; margin-bottom:6px;">${escapeHtml(p.price_range)}</div>` : ''}
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+            ${p.trust_score ? `<span style="font-size:var(--text-xs); color:var(--color-success); font-weight:bold;">Trust: ${p.trust_score}/100</span>` : ''}
+          </div>
+          <p style="font-size:12px; color:var(--color-text-secondary); margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+            ${escapeHtml(p.description || p.ai_description || 'Explore this product for more details.')}
+          </p>
+        </div>
+        <div style="display:flex; gap:6px;">
+          ${p.id
+            ? `<a href="/product/${p.id}" class="btn btn-ghost" style="flex:1; padding:4px; font-size:11px; justify-content:center;">View Details</a>
+               <a href="/compare?ids=${currentProductId},${p.id}" class="btn btn-primary" style="padding:4px 8px; font-size:11px;" title="Compare with ${escapeHtml(p.name)}">⚖</a>`
+            : `<a href="/search?q=${encodeURIComponent(p.name)}" class="btn btn-ghost" style="flex:1; padding:4px; font-size:11px; justify-content:center;">🔍 Search & Analyze</a>`
+          }
+        </div>
+      </div>
+    `).join('');
+    } catch (err) {
+      grid.innerHTML = `<div style="color:var(--color-text-muted); font-size:var(--text-sm);">Unable to load similar products.</div>`;
+    }
+  }
+
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadBuyingReport();
+    loadSimilarProducts();
+  });
+</script>
+{% endblock %}

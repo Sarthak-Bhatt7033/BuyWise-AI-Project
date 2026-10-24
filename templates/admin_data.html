@@ -1,0 +1,821 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Data Hub — BuyWise AI{% endblock %}
+{% block meta_description %}Admin data management, hybrid source configuration, and dataset control panel.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-data-container {
+    padding: var(--space-8) 0 var(--space-16);
+  }
+
+  /* ── Page Header ── */
+  .admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  /* ── Section Cards ── */
+  .section-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .section-card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  /* ── Hybrid Control Panel ── */
+  .source-control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .source-toggle-card {
+    background: var(--color-surface-2);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    transition: border-color 0.2s ease, background 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .source-toggle-card.enabled {
+    border-color: var(--color-success);
+    background: rgba(0, 200, 117, 0.05);
+  }
+
+  .source-toggle-card.disabled {
+    border-color: var(--color-error);
+    background: rgba(255, 99, 99, 0.05);
+    opacity: 0.8;
+  }
+
+  .source-toggle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+  }
+
+  .source-toggle-name {
+    font-weight: var(--weight-bold);
+    font-size: var(--text-base);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .source-toggle-desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--space-3);
+  }
+
+  /* Toggle Switch */
+  .toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--color-surface-3);
+    border-radius: 28px;
+    transition: 0.3s;
+    border: 1px solid var(--color-border);
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .toggle-switch input:checked+.toggle-slider {
+    background: var(--color-success);
+    border-color: var(--color-success);
+  }
+
+  .toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(24px);
+  }
+
+  .source-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .source-status-badge.on {
+    background: rgba(0, 200, 117, 0.15);
+    color: var(--color-success);
+  }
+
+  .source-status-badge.off {
+    background: rgba(255, 99, 99, 0.15);
+    color: var(--color-error);
+  }
+
+  .mode-indicator {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .mode-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Dataset Table ── */
+  .dataset-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .dataset-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .dataset-table th,
+  .dataset-table td {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-subtle);
+    font-size: var(--text-sm);
+    vertical-align: middle;
+  }
+
+  .dataset-table th {
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    background: var(--color-surface-2);
+  }
+
+  .dataset-table tr:hover td {
+    background: rgba(108, 99, 255, 0.03);
+  }
+
+  /* ── Upload Zone ── */
+  .upload-zone {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--color-surface-2);
+    position: relative;
+  }
+
+  .upload-zone:hover,
+  .upload-zone.dragging {
+    border-color: var(--color-primary);
+    background: rgba(108, 99, 255, 0.05);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .upload-icon {
+    font-size: 2rem;
+    margin-bottom: var(--space-3);
+  }
+
+  /* ── Progress Bar ── */
+  .progress-bar-wrap {
+    background: var(--color-surface-3);
+    border-radius: var(--radius-full);
+    height: 6px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
+    transition: width 0.3s ease;
+  }
+
+  /* ── Status pill ── */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+  }
+
+  .status-pill.ready {
+    background: rgba(0, 200, 117, 0.15);
+    color: var(--color-success);
+  }
+
+  .status-pill.pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-warning);
+  }
+
+  .status-pill.ingesting {
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--color-primary);
+  }
+
+  .status-pill.error {
+    background: rgba(255, 99, 99, 0.15);
+    color: var(--color-error);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-data-container">
+
+  <!-- Page Header -->
+  <div class="admin-page-header">
+    <div>
+      <div class="section-label">
+        <i data-lucide="shield" width="12" height="12"></i> Admin Control Panel
+      </div>
+      <h1
+        style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-text-primary); margin-top: 4px;">
+        Data &amp; AI Hub
+      </h1>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: 4px;">
+        Manage data sources, upload datasets, and configure the hybrid AI pipeline.
+      </p>
+    </div>
+    <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-ghost">
+        <i data-lucide="bar-chart-2" width="16" height="16"></i> Analytics
+      </a>
+      <a href="{{ url_for('admin_matching_config') }}" class="btn btn-ghost">
+        <i data-lucide="sliders" width="16" height="16"></i> Matching Config
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 1: HYBRID DATA / AI CONTROL PANEL (BRD §5)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-card-title">
+      <i data-lucide="toggle-right" width="22" height="22" style="color: var(--color-primary);"></i>
+      Hybrid Data / AI Source Control
+      <span class="badge badge-primary" style="font-size: 10px; margin-left: auto;"> </span>
+    </div>
+
+    <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-5);">
+      Control which data sources are active in the analysis pipeline. Changes take effect immediately for all new
+      product searches.
+    </p>
+
+    <!-- Source Toggle Cards -->
+    <div class="source-control-grid" id="source-toggle-grid">
+      <!-- OpenAI -->
+      <div class="source-toggle-card {% if source_config.openai_enabled %}enabled{% else %}disabled{% endif %}"
+        id="card-openai">
+        <div class="source-toggle-header">
+          <div class="source-toggle-name">
+            <i data-lucide="cpu" width="18" height="18" style="color: var(--color-primary);"></i>
+            OpenAI GPT-4o
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-openai" {% if source_config.openai_enabled %}checked{% endif %}
+              onchange="updateSourceConfig()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p class="source-toggle-desc">
+          Enables GPT-4o for product info extraction when not found locally, AI Buying Report generation, AI Chat, and
+          Personalized Assistant.
+        </p>
+        <span class="source-status-badge {% if source_config.openai_enabled %}on{% else %}off{% endif %}"
+          id="badge-openai">
+          <span id="dot-openai"
+            style="width:6px;height:6px;border-radius:50%;background:{% if source_config.openai_enabled %}var(--color-success){% else %}var(--color-error){% endif %};display:inline-block;"></span>
+          {% if source_config.openai_enabled %}ACTIVE{% else %}DISABLED{% endif %}
+        </span>
+      </div>
+
+      <!-- Dataset -->
+      <div class="source-toggle-card {% if source_config.dataset_enabled %}enabled{% else %}disabled{% endif %}"
+        id="card-dataset">
+        <div class="source-toggle-header">
+          <div class="source-toggle-name">
+            <i data-lucide="database" width="18" height="18" style="color: var(--color-secondary);"></i>
+            Kaggle / CSV Datasets
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-dataset" {% if source_config.dataset_enabled %}checked{% endif %}
+              onchange="updateSourceConfig()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p class="source-toggle-desc">
+          Includes reviews ingested from uploaded CSV/Excel datasets in the analysis pipeline. Disable to operate in
+          OpenAI-only mode.
+        </p>
+        <span class="source-status-badge {% if source_config.dataset_enabled %}on{% else %}off{% endif %}"
+          id="badge-dataset">
+          <span id="dot-dataset"
+            style="width:6px;height:6px;border-radius:50%;background:{% if source_config.dataset_enabled %}var(--color-success){% else %}var(--color-error){% endif %};display:inline-block;"></span>
+          {% if source_config.dataset_enabled %}ACTIVE{% else %}DISABLED{% endif %}
+        </span>
+      </div>
+
+      <!-- User Reviews -->
+      <div class="source-toggle-card {% if source_config.user_reviews_enabled %}enabled{% else %}disabled{% endif %}"
+        id="card-user">
+        <div class="source-toggle-header">
+          <div class="source-toggle-name">
+            <i data-lucide="users" width="18" height="18" style="color: var(--color-accent-amber);"></i>
+            User-Submitted Reviews
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-user" {% if source_config.user_reviews_enabled %}checked{% endif %}
+              onchange="updateSourceConfig()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p class="source-toggle-desc">
+          Includes on-site user reviews submitted via the product pages in the analysis pipeline. Disable for a curated
+          dataset-only view.
+        </p>
+        <span class="source-status-badge {% if source_config.user_reviews_enabled %}on{% else %}off{% endif %}"
+          id="badge-user">
+          <span id="dot-user"
+            style="width:6px;height:6px;border-radius:50%;background:{% if source_config.user_reviews_enabled %}var(--color-success){% else %}var(--color-error){% endif %};display:inline-block;"></span>
+          {% if source_config.user_reviews_enabled %}ACTIVE{% else %}DISABLED{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- Current Operating Mode Indicator -->
+    <div class="mode-indicator" id="mode-indicator">
+      <div class="mode-dot" id="mode-dot" style="background: var(--color-success);"></div>
+      <div>
+        <div style="font-weight: var(--weight-semibold); font-size: var(--text-sm); color: var(--color-text-primary);"
+          id="mode-label">
+          Complete Mode
+        </div>
+        <div style="font-size: var(--text-xs); color: var(--color-text-secondary);" id="mode-desc">
+          All sources active — AI Report + Dataset Reviews + User Reviews combined.
+        </div>
+      </div>
+      <div style="margin-left: auto; font-size: var(--text-xs); color: var(--color-text-muted);" id="mode-updated">
+        Last updated by: {{ source_config.updated_by or 'system' }} · {{ (source_config.updated_at|string)[:16] if
+        source_config.updated_at else '' }}
+      </div>
+    </div>
+
+    <!-- Fuzzy Search Threshold -->
+    <div
+      style="margin-top: var(--space-5); padding: var(--space-4) var(--space-5); background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg);">
+      <div
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="sliders-horizontal" width="18" height="18" style="color: var(--color-primary);"></i>
+          <span
+            style="font-weight: var(--weight-semibold); font-size: var(--text-sm); color: var(--color-text-primary);">Product
+            Search Fuzzy Matching Precision</span>
+        </div>
+        <span id="fuzzy-threshold-display"
+          style="font-size: var(--text-sm); font-weight: 700; color: var(--color-primary); background: rgba(108,99,255,0.1); padding: 2px 10px; border-radius: 99px;">{{
+          '%.2f'|format(source_config.fuzzy_threshold or 0.85) }}</span>
+      </div>
+      <input type="range" id="fuzzy-threshold-slider" min="0.50" max="1.00" step="0.01"
+        value="{{ source_config.fuzzy_threshold or 0.85 }}"
+        oninput="document.getElementById('fuzzy-threshold-display').textContent = parseFloat(this.value).toFixed(2); updateSourceConfig();"
+        style="width: 100%; accent-color: var(--color-primary); cursor: pointer;">
+      <div
+        style="display: flex; justify-content: space-between; font-size: 10px; color: var(--color-text-muted); margin-top: 4px;">
+        <span>0.50 — Loose match (more results)</span>
+        <span>1.00 — Exact match only</span>
+      </div>
+      <p style="color: var(--color-text-secondary); font-size: 11px; margin-top: var(--space-2); line-height: 1.5;">
+        Controls how closely a search query must match a cached product name before serving from DB vs. fetching fresh
+        from AI.
+        <strong>Default: 0.85.</strong> Set lower (e.g., 0.70) to be more forgiving; higher (e.g., 0.95) to force AI
+        re-fetch for minor name differences.
+      </p>
+    </div>
+
+    <div id="source-save-status" style="margin-top: var(--space-3); font-size: var(--text-sm); display: none;"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 2: DATASET UPLOAD
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-card-title">
+      <i data-lucide="upload-cloud" width="22" height="22" style="color: var(--color-secondary);"></i>
+      Upload Dataset
+      <span class="badge badge-outline" style="font-size: 10px; margin-left: auto;">CSV / Excel · Max 100 MB</span>
+    </div>
+
+    <div class="upload-zone" id="upload-zone" ondragover="event.preventDefault();this.classList.add('dragging')"
+      ondragleave="this.classList.remove('dragging')" ondrop="handleFileDrop(event)">
+      <input type="file" id="dataset-file-input" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this)">
+      <div class="upload-icon">📤</div>
+      <h3 style="color: var(--color-text-primary); margin-bottom: var(--space-2);">Drop CSV or Excel file here</h3>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">or click to browse · Supports .csv,
+        .xlsx, .xls files up to 100 MB</p>
+      <div id="selected-file-name"
+        style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-primary); font-weight: bold;">
+      </div>
+    </div>
+
+    <div id="upload-progress-area" style="display: none; margin-top: var(--space-4);">
+      <div
+        style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: 6px;">
+        <span id="upload-progress-label">Uploading…</span>
+        <span id="upload-progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="upload-progress-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <div id="upload-msg" style="margin-top: var(--space-4); font-size: var(--text-sm);"></div>
+
+    <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4); justify-content: flex-end;">
+      <button class="btn btn-primary" id="upload-btn" onclick="uploadDataset()" disabled>
+        <i data-lucide="upload" width="16" height="16"></i> Upload &amp; Preview Columns
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 3: DATASETS LIST
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="section-card">
+    <div class="section-card-title">
+      <i data-lucide="layers" width="22" height="22" style="color: var(--color-accent-amber);"></i>
+      Uploaded Datasets
+      <span class="badge badge-outline" style="font-size: 10px; margin-left: auto;">{{ datasets|length }} total</span>
+    </div>
+
+    {% if datasets %}
+    <div class="dataset-table-wrapper">
+      <table class="dataset-table" id="datasets-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Records</th>
+            <th>Status</th>
+            <th>Active in Pipeline</th>
+            <th>Uploaded</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ds in datasets %}
+          <tr id="ds-row-{{ ds.id }}">
+            <td style="color: var(--color-text-muted);">#{{ ds.id }}</td>
+            <td>
+              <div style="font-weight: var(--weight-semibold); color: var(--color-text-primary);">{{
+                ds.original_filename or ds.filename }}</div>
+              <div style="font-size: 11px; color: var(--color-text-muted);">Stored: {{ ds.filename }}</div>
+            </td>
+            <td>
+              <span style="font-weight: bold; color: var(--color-primary); font-size: var(--text-base);">
+                {{ ds.row_count or ds.review_count or 0 }}
+              </span>
+              <span style="font-size: 11px; color: var(--color-text-muted);"> reviews</span>
+            </td>
+            <td>
+              <span class="status-pill {{ ds.status or 'pending' }}" id="ds-status-{{ ds.id }}">
+                {{ (ds.status or 'pending')|upper }}
+              </span>
+              {% if ds.mapping_confirmed %}
+              <span class="badge badge-teal" style="font-size: 9px; display: block; margin-top: 3px;">MAPPED</span>
+              {% else %}
+              <span class="badge badge-amber" style="font-size: 9px; display: block; margin-top: 3px;">NEEDS
+                MAPPING</span>
+              {% endif %}
+            </td>
+            <td>
+              <label class="toggle-switch" title="Toggle dataset in analysis pipeline">
+                <input type="checkbox" {% if ds.enabled %}checked{% endif %}
+                  onchange="toggleDataset({{ ds.id }}, this.checked)" id="ds-toggle-{{ ds.id }}">
+                <span class="toggle-slider"></span>
+              </label>
+            </td>
+            <td style="color: var(--color-text-muted); font-size: var(--text-xs);">{{ (ds.uploaded_at|string)[:16] if
+              ds.uploaded_at else '' }}</td>
+            <td>
+              <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                <a href="{{ url_for('admin_column_mapper', dataset_id=ds.id) }}" class="btn btn-primary"
+                  style="padding: 4px 10px; font-size: 11px;">
+                  <i data-lucide="columns" width="12" height="12"></i> Map &amp; Ingest
+                </a>
+                <button class="btn btn-ghost" onclick="reingestDataset({{ ds.id }})"
+                  style="padding: 4px 10px; font-size: 11px; color: var(--color-secondary);" title="Re-process dataset">
+                  <i data-lucide="refresh-cw" width="12" height="12"></i> Re-Ingest
+                </button>
+                <button class="btn btn-ghost" onclick="deleteDataset({{ ds.id }})"
+                  style="padding: 4px 10px; font-size: 11px; color: var(--color-error);"
+                  title="Delete dataset and records">
+                  <i data-lucide="trash-2" width="12" height="12"></i> Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: var(--space-8); color: var(--color-text-muted);">
+      <i data-lucide="inbox" width="40" height="40" style="opacity: 0.4; margin-bottom: var(--space-3);"></i>
+      <p>No datasets uploaded yet. Upload a CSV or Excel file above to get started.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* ── Source Config Toggles ── */
+  async function updateSourceConfig() {
+    const openai = document.getElementById('toggle-openai').checked;
+    const dataset = document.getElementById('toggle-dataset').checked;
+    const user = document.getElementById('toggle-user').checked;
+
+    const statusEl = document.getElementById('source-save-status');
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--color-text-muted)';
+    statusEl.textContent = 'Saving…';
+
+    try {
+      const res = await fetch('/api/source-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ openai_enabled: openai, dataset_enabled: dataset, user_reviews_enabled: user, fuzzy_threshold: parseFloat(document.getElementById('fuzzy-threshold-slider')?.value || 0.85) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        updateToggleCards(openai, dataset, user);
+        updateModeIndicator(openai, dataset, user);
+        statusEl.style.color = 'var(--color-success)';
+        statusEl.textContent = '✓ Source configuration saved successfully.';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+      } else {
+        statusEl.style.color = 'var(--color-error)';
+        statusEl.textContent = 'Error saving configuration.';
+      }
+    } catch (err) {
+      statusEl.style.color = 'var(--color-error)';
+      statusEl.textContent = 'Network error: ' + err.message;
+    }
+  }
+
+  function updateToggleCards(openai, dataset, user) {
+    const configs = [
+      { key: 'openai', val: openai },
+      { key: 'dataset', val: dataset },
+      { key: 'user', val: user }
+    ];
+    configs.forEach(({ key, val }) => {
+      const card = document.getElementById('card-' + key);
+      const badge = document.getElementById('badge-' + key);
+      const dot = document.getElementById('dot-' + key);
+      if (card) {
+        card.classList.toggle('enabled', val);
+        card.classList.toggle('disabled', !val);
+      }
+      if (badge) {
+        badge.className = 'source-status-badge ' + (val ? 'on' : 'off');
+        badge.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${val ? 'var(--color-success)' : 'var(--color-error)'};display:inline-block;"></span> ${val ? 'ACTIVE' : 'DISABLED'}`;
+      }
+    });
+  }
+
+  function updateModeIndicator(openai, dataset, user) {
+    const dot = document.getElementById('mode-dot');
+    const label = document.getElementById('mode-label');
+    const desc = document.getElementById('mode-desc');
+    const count = [openai, dataset, user].filter(Boolean).length;
+
+    const modes = {
+      '111': { label: 'Complete Mode', desc: 'All sources active — Dataset + User Reviews + OpenAI combined.', color: 'var(--color-success)' },
+      '110': { label: 'Dataset + OpenAI Mode', desc: 'User reviews excluded. Dataset + AI knowledge base active.', color: 'var(--color-secondary)' },
+      '101': { label: 'OpenAI + User Reviews Mode', desc: 'Dataset excluded. AI knowledge + user reviews active.', color: 'var(--color-primary)' },
+      '011': { label: 'Dataset + User Reviews Mode', desc: 'OpenAI disabled. Purely local dataset + user reviews.', color: 'var(--color-accent-amber)' },
+      '100': { label: 'OpenAI Only Mode', desc: 'Only AI knowledge base active. No local data used.', color: 'var(--color-primary)' },
+      '010': { label: 'Dataset Only Mode', desc: 'Strict offline mode — only uploaded datasets used.', color: 'var(--color-accent-amber)' },
+      '001': { label: 'User Reviews Only Mode', desc: 'Only user-submitted reviews. No AI or dataset source.', color: 'var(--color-secondary)' },
+      '000': { label: '⚠️ All Sources Disabled', desc: 'No data sources active. All searches will return an error.', color: 'var(--color-error)' },
+    };
+
+    const key = (openai ? '1' : '0') + (dataset ? '1' : '0') + (user ? '1' : '0');
+    const mode = modes[key] || modes['000'];
+
+    if (dot) dot.style.background = mode.color;
+    if (label) label.textContent = mode.label;
+    if (desc) desc.textContent = mode.desc;
+  }
+
+  /* ── File Upload ── */
+  let selectedFile = null;
+
+  function handleFileSelect(input) {
+    selectedFile = input.files[0];
+    if (selectedFile) {
+      document.getElementById('selected-file-name').textContent = '📄 ' + selectedFile.name;
+      document.getElementById('upload-btn').disabled = false;
+    }
+  }
+
+  function handleFileDrop(event) {
+    event.preventDefault();
+    document.getElementById('upload-zone').classList.remove('dragging');
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      selectedFile = file;
+      document.getElementById('selected-file-name').textContent = '📄 ' + file.name;
+      document.getElementById('upload-btn').disabled = false;
+    }
+  }
+
+  async function uploadDataset() {
+    if (!selectedFile) return;
+    const btn = document.getElementById('upload-btn');
+    const msg = document.getElementById('upload-msg');
+    const progressArea = document.getElementById('upload-progress-area');
+    const progressBar = document.getElementById('upload-progress-bar');
+    const progressLabel = document.getElementById('upload-progress-label');
+    const progressPct = document.getElementById('upload-progress-pct');
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;"></div> Uploading…';
+    progressArea.style.display = 'block';
+    msg.textContent = '';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      // Simulate progress
+      let pct = 0;
+      const ticker = setInterval(() => {
+        pct = Math.min(pct + 8, 85);
+        progressBar.style.width = pct + '%';
+        progressPct.textContent = pct + '%';
+      }, 200);
+
+      const res = await fetch('/api/admin/datasets/upload', { method: 'POST', body: formData });
+      clearInterval(ticker);
+      progressBar.style.width = '100%';
+      progressPct.textContent = '100%';
+      progressLabel.textContent = 'Upload complete!';
+
+      const data = await res.json();
+      if (data.success) {
+        msg.innerHTML = `<span style="color:var(--color-success);">✓ Dataset uploaded! <a href="${data.mapper_url}" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px; margin-left: 8px;">Configure Columns →</a></span>`;
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        msg.innerHTML = `<span style="color:var(--color-error);">✗ Upload failed: ${data.error || 'Unknown error'}</span>`;
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="upload" width="16" height="16"></i> Upload & Preview Columns';
+        lucide.createIcons();
+      }
+    } catch (err) {
+      msg.innerHTML = `<span style="color:var(--color-error);">✗ Network error: ${err.message}</span>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="upload" width="16" height="16"></i> Upload & Preview Columns';
+      lucide.createIcons();
+    }
+  }
+
+  /* ── Dataset Toggle ── */
+  async function toggleDataset(id, enabled) {
+    try {
+      const res = await fetch(`/api/admin/datasets/${id}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        // Revert toggle on failure
+        document.getElementById('ds-toggle-' + id).checked = !enabled;
+      }
+    } catch (err) {
+      document.getElementById('ds-toggle-' + id).checked = !enabled;
+    }
+  }
+
+  /* ── Re-Ingest ── */
+  async function reingestDataset(id) {
+    if (!confirm('Re-ingest this dataset? Existing records will be replaced.')) return;
+    const btn = event.target.closest('button');
+    if (btn) { btn.disabled = true; btn.textContent = 'Re-ingesting…'; }
+
+    try {
+      const res = await fetch(`/api/admin/datasets/${id}/reingest`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await res.json();
+      if (data.success) {
+        const statusEl = document.getElementById('ds-status-' + id);
+        if (statusEl) {
+          statusEl.className = 'status-pill ready';
+          statusEl.textContent = 'READY';
+        }
+        alert('Re-ingestion complete! Records updated.');
+      } else {
+        alert('Re-ingestion failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="refresh-cw" width="12" height="12"></i> Re-Ingest'; lucide.createIcons(); }
+  }
+
+  /* ── Delete Dataset ── */
+  async function deleteDataset(id) {
+    if (!confirm('Delete this dataset and all its review records? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/admin/datasets/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        const row = document.getElementById('ds-row-' + id);
+        if (row) row.remove();
+      } else {
+        alert('Delete failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset Management — BuyWise AI Admin{% endblock %}
+{% block meta_description %}Manage, upload, enable/disable, and delete Kaggle review datasets for BuyWise AI.{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-container {
+  padding: var(--space-8) 0 var(--space-16);
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.admin-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+}
+
+.upload-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.upload-dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  background: var(--color-surface-2);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.upload-dropzone:hover {
+  border-color: var(--color-primary);
+  background: rgba(108, 99, 255, 0.05);
+}
+
+.dataset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-6);
+}
+
+.dataset-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dataset-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.dataset-filename {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.dataset-meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--color-surface-3);
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--color-success);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-container">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div>
+      <div class="section-label"><i data-lucide="database" width="14" height="14"></i> Admin Data Management</div>
+      <h1 class="admin-title">Multi-Dataset Management</h1>
+    </div>
+    <a href="/search" class="btn btn-ghost">
+      <i data-lucide="arrow-left" width="16" height="16"></i> Go to App
+    </a>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="upload-card">
+    <h3 style="margin-bottom: var(--space-2); color: var(--color-text-primary);">
+      <i data-lucide="upload-cloud" width="20" height="20" style="color: var(--color-primary);"></i>
+      Upload Kaggle CSV or Excel Dataset
+    </h3>
+    <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-6);">
+      Upload product review datasets (.csv, .xlsx). The system will automatically detect product names, review text, ratings, and verified status.
+    </p>
+
+    <form id="dataset-upload-form" enctype="multipart/form-data">
+      <div class="upload-dropzone" onclick="document.getElementById('file-input').click()">
+        <i data-lucide="file-spreadsheet" width="48" height="48" style="color: var(--color-primary); margin-bottom: var(--space-3);"></i>
+        <h4 style="color: var(--color-text-primary);" id="file-label">Click or Drag File Here to Upload</h4>
+        <p style="color: var(--color-text-muted); font-size: var(--text-xs);">Supported formats: CSV, XLSX, XLS (Max 100MB)</p>
+        <input type="file" id="file-input" name="file" accept=".csv, .xlsx, .xls" style="display: none;" onchange="updateFileName(this)">
+      </div>
+
+      <div style="margin-top: var(--space-4); text-align: right;">
+        <button type="submit" class="btn btn-primary" id="upload-btn">
+          <i data-lucide="upload" width="16" height="16"></i> Process & Ingest Dataset
+        </button>
+      </div>
+    </form>
+    <div id="upload-message" style="margin-top: var(--space-3); font-size: var(--text-sm);"></div>
+  </div>
+
+  <!-- Datasets List -->
+  <h3 style="margin-bottom: var(--space-4); color: var(--color-text-primary);">Uploaded Datasets</h3>
+  
+  <div class="dataset-grid" id="datasets-grid">
+    {% for ds in datasets %}
+      <div class="dataset-card" id="dataset-card-{{ ds.id }}">
+        <div>
+          <div class="dataset-card-header">
+            <span class="dataset-filename">{{ ds.original_filename }}</span>
+            <span class="badge {% if ds.status == 'ready' %}badge-teal{% elif ds.status == 'processing' %}badge-amber{% elif ds.status == 'failed' %}badge-rose{% else %}badge-outline{% endif %}">
+              {{ ds.status }}
+            </span>
+          </div>
+          
+          <div class="dataset-meta">
+            <span><i data-lucide="layers" width="12" height="12"></i> {{ ds.row_count }} reviews</span>
+            <span><i data-lucide="calendar" width="12" height="12"></i> {{ (ds.uploaded_at|string)[:10] if ds.uploaded_at else 'Recent' }}</span>
+          </div>
+
+          {% if ds.error_message %}
+            <p style="color: var(--color-error); font-size: var(--text-xs); margin-bottom: var(--space-3);">
+              Error: {{ ds.error_message }}
+            </p>
+          {% endif %}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-border-subtle); padding-top: var(--space-3); margin-top: var(--space-3);">
+          <label style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--color-text-secondary); cursor: pointer;">
+            <div class="switch">
+              <input type="checkbox" {% if ds.enabled %}checked{% endif %} onchange="toggleDataset({{ ds.id }}, this.checked)">
+              <span class="slider"></span>
+            </div>
+            <span>{% if ds.enabled %}Enabled{% else %}Disabled{% endif %}</span>
+          </label>
+
+          <button class="btn btn-ghost" style="color: var(--color-error); padding: var(--space-1) var(--space-2);" onclick="deleteDataset({{ ds.id }})">
+            <i data-lucide="trash-2" width="16" height="16"></i> Delete
+          </button>
+        </div>
+      </div>
+    {% else %}
+      <div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: var(--space-8);">
+        No datasets uploaded yet. Upload a Kaggle review CSV/Excel above to get started.
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateFileName(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('file-label').textContent = 'Selected: ' + input.files[0].name;
+  }
+}
+
+document.getElementById('dataset-upload-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fileInput = document.getElementById('file-input');
+  if (!fileInput.files.length) {
+    alert('Please select a file first.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  const btn = document.getElementById('upload-btn');
+  const msg = document.getElementById('upload-message');
+  btn.disabled = true;
+  btn.textContent = 'Uploading & Ingesting…';
+  msg.textContent = 'Processing dataset with pandas...';
+  msg.style.color = 'var(--color-primary)';
+
+  try {
+    const res = await fetch('/api/admin/datasets/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.textContent = 'Dataset ingested successfully!';
+      msg.style.color = 'var(--color-success)';
+      setTimeout(() => window.location.reload(), 1200);
+    } else {
+      msg.textContent = 'Upload failed: ' + (data.error || 'Unknown error');
+      msg.style.color = 'var(--color-error)';
+      btn.disabled = false;
+      btn.textContent = 'Process & Ingest Dataset';
+    }
+  } catch (err) {
+    msg.textContent = 'Error uploading dataset: ' + err.message;
+    msg.style.color = 'var(--color-error)';
+    btn.disabled = false;
+    btn.textContent = 'Process & Ingest Dataset';
+  }
+});
+
+async function toggleDataset(id, enabled) {
+  try {
+    await fetch(`/api/admin/datasets/${id}/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled })
+    });
+  } catch (err) {
+    alert('Failed to update toggle: ' + err.message);
+  }
+}
+
+async function deleteDataset(id) {
+  if (!confirm('Are you sure you want to delete this dataset? All associated review records will be removed.')) return;
+  try {
+    const res = await fetch(`/api/admin/datasets/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById(`dataset-card-${id}`).remove();
+    } else {
+      alert('Delete failed: ' + data.error);
+    }
+  } catch (err) {
+    alert('Delete failed: ' + err.message);
+  }
+}
+</script>
+{% endblock %}

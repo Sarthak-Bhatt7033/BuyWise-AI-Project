@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}Product Name Matching Configuration — BuyWise AI{% endblock %}
+{% block meta_description %}Configure product matching algorithms, fuzzy thresholds, and manage brand aliases.{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-matching-container { padding: var(--space-8) 0 var(--space-16); }
+
+.matching-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.matching-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.strategy-option {
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.strategy-option.selected {
+  border-color: var(--color-primary);
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.strategy-option input[type="radio"] {
+  margin-right: var(--space-2);
+}
+
+.config-form-group {
+  margin-bottom: var(--space-5);
+}
+
+.config-form-group label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.config-form-group .form-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.threshold-slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.threshold-slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--color-primary);
+}
+
+.threshold-val {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-primary);
+  min-width: 50px;
+}
+
+.alias-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-4);
+}
+
+.alias-table th, .alias-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-sm);
+}
+
+.alias-table th {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+.test-tool-box {
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.test-result-box {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-matching-container">
+
+  <!-- Breadcrumb / Header -->
+  <nav style="margin-bottom: var(--space-4);">
+    <a href="{{ url_for('admin_data') }}" class="btn btn-ghost" style="padding: var(--space-2) var(--space-3); font-size: var(--text-sm);">
+      <i data-lucide="arrow-left" width="16" height="16"></i> Back to Data Hub
+    </a>
+  </nav>
+
+  <div class="section-label">
+    <i data-lucide="sliders" width="12" height="12"></i> Configuration &amp; Resolution
+  </div>
+  <h1 style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-text-primary); margin-top: 4px; margin-bottom: var(--space-6);">
+    Product Matching &amp; Alias Settings
+  </h1>
+
+  <!-- Strategy Settings Card -->
+  <div class="matching-card">
+    <div class="matching-card-title">
+      <i data-lucide="cpu" width="22" height="22" style="color: var(--color-primary);"></i>
+      Matching Strategy Engine
+    </div>
+
+    <form id="matching-config-form" onsubmit="saveMatchingConfig(event)">
+      <div class="config-form-group">
+        <label>Select Matching Algorithm Strategy</label>
+        <div class="strategy-grid">
+          <label class="strategy-option {% if cfg.strategy == 'fuzzy' %}selected{% endif %}" onclick="selectStrategy('fuzzy')">
+            <div style="font-weight: bold; color: var(--color-text-primary); display: flex; align-items: center;">
+              <input type="radio" name="strategy" value="fuzzy" {% if cfg.strategy == 'fuzzy' %}checked{% endif %}>
+              Fuzzy Sequence Matching (Recommended)
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 6px;">
+              Matches names based on string similarity ratio (SequenceMatcher) exceeding the configured threshold.
+            </div>
+          </label>
+
+          <label class="strategy-option {% if cfg.strategy == 'alias' %}selected{% endif %}" onclick="selectStrategy('alias')">
+            <div style="font-weight: bold; color: var(--color-text-primary); display: flex; align-items: center;">
+              <input type="radio" name="strategy" value="alias" {% if cfg.strategy == 'alias' %}checked{% endif %}>
+              Fuzzy + Alias Dictionary
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 6px;">
+              Combines fuzzy scoring with explicit alias synonyms and ASIN lookups.
+            </div>
+          </label>
+
+          <label class="strategy-option {% if cfg.strategy == 'exact' %}selected{% endif %}" onclick="selectStrategy('exact')">
+            <div style="font-weight: bold; color: var(--color-text-primary); display: flex; align-items: center;">
+              <input type="radio" name="strategy" value="exact" {% if cfg.strategy == 'exact' %}checked{% endif %}>
+              Exact Normalized Match Only
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 6px;">
+              Strict case-insensitive exact string match without approximate distance.
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Threshold Slider -->
+      <div class="config-form-group">
+        <label>Fuzzy Match Similarity Threshold</label>
+        <div class="threshold-slider-row">
+          <input type="range" id="fuzzy-threshold" min="0.50" max="1.00" step="0.05" value="{{ cfg.fuzzy_threshold }}" oninput="document.getElementById('threshold-display').textContent = this.value">
+          <span class="threshold-val" id="threshold-display">{{ cfg.fuzzy_threshold }}</span>
+        </div>
+        <div class="form-hint">
+          Higher values (e.g. 0.85 – 0.95) ensure strict accuracy. Lower values (e.g. 0.65 – 0.75) catch more variations but may introduce false matches.
+        </div>
+      </div>
+
+      <!-- Use Aliases Toggle -->
+      <div class="config-form-group">
+        <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+          <input type="checkbox" id="use-aliases" {% if cfg.use_aliases %}checked{% endif %}>
+          <span>Enable Product Alias Lookup in Review Ingestion</span>
+        </label>
+        <div class="form-hint">
+          When active, dataset review records with alternate names or model numbers will map to the target canonical product.
+        </div>
+      </div>
+
+      <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;">
+        <span id="config-save-msg" style="font-size: var(--text-sm); display: none;"></span>
+        <button type="submit" class="btn btn-primary" id="save-config-btn">
+          <i data-lucide="check" width="16" height="16"></i> Save Configuration
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Interactive Resolution Test Tool -->
+  <div class="matching-card">
+    <div class="matching-card-title">
+      <i data-lucide="compass" width="22" height="22" style="color: var(--color-secondary);"></i>
+      Resolver Diagnostic Test Tool
+    </div>
+    <p style="color: var(--color-text-secondary); font-size: var(--text-sm);">
+      Test how a sample raw name from an ingested dataset or search query gets resolved against current catalog and rules.
+    </p>
+
+    <div class="test-tool-box">
+      <div style="display: flex; gap: var(--space-3);">
+        <input type="text" id="test-name-input" class="search-input" placeholder="e.g. 'Apple iPhone 15 Pro Max 256GB Black' or 'Sony WH1000XM5'" style="flex: 1;">
+        <button type="button" class="btn btn-secondary" onclick="runResolutionTest()" style="background: var(--color-secondary); color: var(--color-text-inverse);">
+          <i data-lucide="search" width="16" height="16"></i> Test Resolve
+        </button>
+      </div>
+
+      <div id="test-result-box" class="test-result-box">
+        <div id="test-result-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alias Management Card -->
+  <div class="matching-card">
+    <div class="matching-card-title">
+      <i data-lucide="link-2" width="22" height="22" style="color: var(--color-accent-amber);"></i>
+      Product Aliases &amp; Alternate Names
+      <span class="badge badge-outline" style="font-size: 10px; margin-left: auto;">{{ aliases|length }} defined</span>
+    </div>
+
+    <!-- Add Alias Form -->
+    <form id="add-alias-form" onsubmit="addAlias(event)" style="background: var(--color-surface-2); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); border: 1px solid var(--color-border-subtle);">
+      <h4 style="color: var(--color-text-primary); margin-bottom: var(--space-3); font-size: var(--text-sm);">Add New Product Alias</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-3); align-items: end;">
+        <div>
+          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Target Canonical Product</label>
+          <select id="alias-product-id" class="search-input" style="width: 100%; padding: var(--space-2);" required>
+            <option value="">— Select Product —</option>
+            {% for p in products %}
+              <option value="{{ p.id }}">{{ p.name }} ({{ p.brand or 'General' }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="display: block; font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Alias / Synonym / ASIN</label>
+          <input type="text" id="alias-name" class="search-input" style="width: 100%; padding: var(--space-2);" placeholder="e.g. 'iPhone 15', 'WH-1000XM5/B'" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: var(--space-2) var(--space-4);">
+          <i data-lucide="plus" width="16" height="16"></i> Add Alias
+        </button>
+      </div>
+      <div id="alias-msg" style="margin-top: var(--space-2); font-size: var(--text-xs);"></div>
+    </form>
+
+    <!-- Aliases Table -->
+    {% if aliases %}
+    <div style="overflow-x: auto;">
+      <table class="alias-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Alias String</th>
+            <th>Maps To Product</th>
+            <th>Source</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="aliases-tbody">
+          {% for a in aliases %}
+            <tr id="alias-row-{{ a.id }}">
+              <td style="color: var(--color-text-muted);">#{{ a.id }}</td>
+              <td><strong style="color: var(--color-text-primary);">{{ a.alias }}</strong></td>
+              <td>
+                <span class="badge badge-teal">{{ a.product_name }}</span>
+                <span style="font-size: 11px; color: var(--color-text-muted);">(ID: {{ a.product_id }})</span>
+              </td>
+              <td><span class="badge badge-outline" style="font-size: 10px; text-transform: uppercase;">{{ a.source or 'manual' }}</span></td>
+              <td>
+                <button class="btn btn-ghost" onclick="deleteAlias({{ a.id }})" style="padding: 4px 8px; font-size: 11px; color: var(--color-error);">
+                  <i data-lucide="trash-2" width="12" height="12"></i> Remove
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; color: var(--color-text-muted); padding: var(--space-6);">
+      No aliases registered yet. Add synonyms or ASIN mappings above to assist fuzzy resolution.
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectStrategy(strategy) {
+  document.querySelectorAll('.strategy-option').forEach(el => el.classList.remove('selected'));
+  const radio = document.querySelector(`input[name="strategy"][value="${strategy}"]`);
+  if (radio) {
+    radio.checked = true;
+    radio.closest('.strategy-option').classList.add('selected');
+  }
+}
+
+async function saveMatchingConfig(e) {
+  e.preventDefault();
+  const form = e.target;
+  const strategy = form.querySelector('input[name="strategy"]:checked').value;
+  const threshold = parseFloat(document.getElementById('fuzzy-threshold').value);
+  const useAliases = document.getElementById('use-aliases').checked;
+  const msg = document.getElementById('config-save-msg');
+  const btn = document.getElementById('save-config-btn');
+
+  btn.disabled = true;
+  msg.style.display = 'inline';
+  msg.style.color = 'var(--color-text-muted)';
+  msg.textContent = 'Saving…';
+
+  try {
+    const res = await fetch('/api/admin/matching-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ strategy, fuzzy_threshold: threshold, use_aliases: useAliases })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = 'var(--color-success)';
+      msg.textContent = '✓ Configuration saved!';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } else {
+      msg.style.color = 'var(--color-error)';
+      msg.textContent = 'Error saving configuration.';
+    }
+  } catch (err) {
+    msg.style.color = 'var(--color-error)';
+    msg.textContent = 'Network error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function runResolutionTest() {
+  const name = document.getElementById('test-name-input').value.trim();
+  const box = document.getElementById('test-result-box');
+  const content = document.getElementById('test-result-content');
+
+  if (!name) return;
+  box.style.display = 'block';
+  content.innerHTML = '<span style="color:var(--color-text-muted);">Resolving…</span>';
+
+  try {
+    const res = await fetch('/api/admin/matching-config/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    const result = data.result || {};
+
+    if (result.matched) {
+      content.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span class="badge badge-teal" style="margin-bottom:6px;">MATCH RESOLVED</span>
+            <div style="font-size:var(--text-base); font-weight:bold; color:var(--color-text-primary);">${escapeHtml(result.product_name)}</div>
+            <div style="font-size:var(--text-xs); color:var(--color-text-secondary); margin-top:2px;">Product ID: ${result.product_id}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:var(--text-sm); font-weight:bold; color:var(--color-success);">${Math.round(result.score * 100)}% Confidence</div>
+            <span class="badge badge-outline" style="font-size:10px; text-transform:uppercase;">Method: ${result.method}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div style="color:var(--color-warning);">
+          <strong>No match found</strong> for "<em>${escapeHtml(name)}</em>" with current strategy and threshold.
+        </div>
+      `;
+    }
+  } catch (err) {
+    content.innerHTML = `<span style="color:var(--color-error);">Error: ${err.message}</span>`;
+  }
+}
+
+async function addAlias(e) {
+  e.preventDefault();
+  const pId = document.getElementById('alias-product-id').value;
+  const alias = document.getElementById('alias-name').value.trim();
+  const msg = document.getElementById('alias-msg');
+
+  if (!pId || !alias) return;
+
+  try {
+    const res = await fetch('/api/admin/aliases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: pId, alias })
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.style.color = 'var(--color-success)';
+      msg.textContent = '✓ Alias added!';
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      msg.style.color = 'var(--color-error)';
+      msg.textContent = 'Error: ' + (data.error || 'Failed to add alias');
+    }
+  } catch (err) {
+    msg.style.color = 'var(--color-error)';
+    msg.textContent = 'Network error: ' + err.message;
+  }
+}
+
+async function deleteAlias(id) {
+  if (!confirm('Remove this alias?')) return;
+  try {
+    const res = await fetch(`/api/admin/aliases/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      const row = document.getElementById('alias-row-' + id);
+      if (row) row.remove();
+    } else {
+      alert('Failed to delete alias');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+{% endblock %}

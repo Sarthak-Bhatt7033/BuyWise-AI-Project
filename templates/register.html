@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — BuyWise AI{% endblock %}
+{% block meta_description %}Create your free BuyWise AI account and start making smarter purchasing decisions with AI-powered product analysis and trust scores.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+
+  <!-- ════════════════ LEFT BRAND PANEL ════════════════ -->
+  <div class="auth-brand-panel" aria-hidden="true">
+    <div class="brand-blob-1"></div>
+    <div class="brand-blob-2"></div>
+    <div class="brand-blob-3"></div>
+    <div class="brand-grid"></div>
+
+    <a href="{{ url_for('index') }}" class="auth-logo">
+      <div class="auth-logo-mark">✦</div>
+      <span class="auth-logo-text">BuyWise<span> AI</span></span>
+    </a>
+
+    <div class="brand-panel-content">
+      <div class="brand-headline">
+        <h2>Join 25,000+<br>smart shoppers.<br><span style="background:linear-gradient(135deg,#6C63FF,#00D4AA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Shop smarter.</span></h2>
+        <p>Start using AI to research products, detect fake reviews, and make buying decisions you'll be proud of — completely free.</p>
+      </div>
+
+      <ul class="brand-features">
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="sparkles" width="15" height="15"></i>
+          </div>
+          Free AI product analysis — no credit card
+        </li>
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="history" width="15" height="15"></i>
+          </div>
+          Save research history and wishlists
+        </li>
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="bell" width="15" height="15"></i>
+          </div>
+          Alerts when product trust scores change
+        </li>
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="users" width="15" height="15"></i>
+          </div>
+          Access community recommendations
+        </li>
+      </ul>
+
+      <div class="brand-stats">
+        <div class="brand-stat-item">
+          <span class="brand-stat-num">Free</span>
+          <span class="brand-stat-lbl">Always & forever</span>
+        </div>
+        <div class="brand-stat-item">
+          <span class="brand-stat-num">2M+</span>
+          <span class="brand-stat-lbl">Reviews Processed</span>
+        </div>
+        <div class="brand-stat-item">
+          <span class="brand-stat-num">60s</span>
+          <span class="brand-stat-lbl">Avg. Analysis Time</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-bottom">
+      <p class="brand-quote">"An informed buyer is a happy buyer." — The BuyWise Philosophy</p>
+    </div>
+  </div>
+
+  <!-- ════════════════ RIGHT FORM PANEL ════════════════ -->
+  <div class="auth-form-panel">
+    <div class="auth-form-wrapper">
+
+      <!-- Mobile logo -->
+      <a href="{{ url_for('index') }}" class="auth-logo" id="mobile-auth-logo" style="display:none;">
+        <div class="auth-logo-mark" style="width:36px;height:36px;font-size:17px;">✦</div>
+        <span class="auth-logo-text" style="font-size:1.05rem;">BuyWise<span> AI</span></span>
+      </a>
+
+      <!-- Header -->
+      <div class="auth-form-header">
+        <h1>Create your account ✨</h1>
+        <p>Already have an account? <a href="{{ url_for('login') }}">Sign in →</a></p>
+      </div>
+
+      <!-- Server-side error -->
+      {% if error %}
+      <div class="auth-flash error" role="alert">
+        <i data-lucide="alert-circle" width="15" height="15"></i>
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <!-- REGISTER FORM -->
+      <form class="auth-form" id="register-form" method="POST" action="{{ url_for('register') }}" novalidate>
+
+        <!-- Full Name -->
+        <div class="field-wrap">
+          <label class="field-label" for="full_name">Full Name</label>
+          <div class="input-shell">
+            <span class="input-icon-left">
+              <i data-lucide="user" width="16" height="16"></i>
+            </span>
+            <input
+              type="text"
+              id="full_name"
+              name="full_name"
+              class="input-field"
+              placeholder="Your full name"
+              autocomplete="name"
+              required
+            >
+          </div>
+          <div class="field-error" id="full_name-error"></div>
+        </div>
+
+        <!-- Email -->
+        <div class="field-wrap">
+          <label class="field-label" for="email">Email Address</label>
+          <div class="input-shell">
+            <span class="input-icon-left">
+              <i data-lucide="mail" width="16" height="16"></i>
+            </span>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="input-field"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            >
+          </div>
+          <div class="field-error" id="email-error"></div>
+        </div>
+
+        <!-- Password -->
+        <div class="field-wrap">
+          <label class="field-label" for="password">Password</label>
+          <div class="input-shell">
+            <span class="input-icon-left">
+              <i data-lucide="lock" width="16" height="16"></i>
+            </span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="input-field has-trail"
+              placeholder="Minimum 8 characters"
+              autocomplete="new-password"
+              required
+              aria-describedby="pw-strength"
+            >
+            <button type="button" class="input-icon-right" data-toggle-password="password" aria-label="Toggle password">
+              <span class="eye-open"><i data-lucide="eye" width="16" height="16"></i></span>
+              <span class="eye-close" style="display:none;"><i data-lucide="eye-off" width="16" height="16"></i></span>
+            </button>
+          </div>
+          <!-- Strength meter -->
+          <div class="password-strength" id="pw-strength">
+            <div class="strength-track">
+              <div class="strength-fill"></div>
+            </div>
+            <div class="strength-meta">
+              <span>Password strength</span>
+              <span class="strength-text"></span>
+            </div>
+          </div>
+          <div class="field-error" id="password-error"></div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="field-wrap">
+          <label class="field-label" for="confirm_password">Confirm Password</label>
+          <div class="input-shell">
+            <span class="input-icon-left">
+              <i data-lucide="shield-check" width="16" height="16"></i>
+            </span>
+            <input
+              type="password"
+              id="confirm_password"
+              name="confirm_password"
+              class="input-field has-trail"
+              placeholder="Repeat your password"
+              autocomplete="new-password"
+              required
+            >
+            <button type="button" class="input-icon-right" data-toggle-password="confirm_password" aria-label="Toggle confirm password">
+              <span class="eye-open"><i data-lucide="eye" width="16" height="16"></i></span>
+              <span class="eye-close" style="display:none;"><i data-lucide="eye-off" width="16" height="16"></i></span>
+            </button>
+          </div>
+          <div class="field-error" id="confirm_password-error"></div>
+        </div>
+
+        <!-- Terms -->
+        <div>
+          <label class="checkbox-label">
+            <input type="checkbox" name="terms" id="terms" class="checkbox-input" required>
+            <span>I agree to the <a href="#" style="color:var(--color-primary);font-weight:600;">Terms of Service</a> and <a href="#" style="color:var(--color-primary);font-weight:600;">Privacy Policy</a></span>
+          </label>
+          <div class="field-error" id="terms-error"></div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="auth-submit" id="register-submit">
+          <span class="btn-text">
+            <i data-lucide="user-plus" width="17" height="17"></i>
+            Create Account — It's Free
+          </span>
+          <span class="btn-spinner">
+            <div class="spinner" style="width:18px;height:18px;border-color:rgba(255,255,255,0.35);border-top-color:#fff;"></div>
+            <span style="margin-left:0.5rem;">Creating account…</span>
+          </span>
+        </button>
+
+      </form>
+
+      <!-- Bottom note -->
+      <p class="auth-note">
+        🔒 Your data is encrypted and never sold.<br>
+        Free forever — no credit card required.
+      </p>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Success Overlay ── -->
+{% if success %}
+<div class="success-overlay show" id="success-overlay" role="dialog" aria-modal="true">
+  <div class="success-modal">
+    <div class="success-check">
+      <i data-lucide="check-circle" width="38" height="38"></i>
+    </div>
+    <h3>You're in! 🎉</h3>
+    <p>Your BuyWise AI account is ready.<br>Redirecting you to login…</p>
+    <a href="{{ url_for('login') }}" class="auth-submit" style="text-decoration:none;width:auto;padding:0.75rem 2rem;">
+      Go to Login →
+    </a>
+  </div>
+</div>
+<script>
+  setTimeout(function() { window.location.href = '{{ url_for("login") }}'; }, 3000);
+</script>
+{% endif %}
+
+<style>
+  .navbar { display: none; }
+  @media (max-width: 900px) {
+    #mobile-auth-logo { display: flex !important; }
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth-validation.js') }}"></script>
+{% endblock %}

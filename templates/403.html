@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}403 Forbidden — BuyWise AI{% endblock %}
+{% block meta_description %}Access Denied — You do not have administrator permissions to view this page.{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: var(--space-16) var(--space-4); text-align: center; max-width: 600px; margin: 0 auto;">
+  <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(255, 99, 99, 0.1); border: 2px solid var(--color-error); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6);">
+    <i data-lucide="shield-alert" width="40" height="40" style="color: var(--color-error);"></i>
+  </div>
+  
+  <div class="section-label" style="margin-bottom: var(--space-3); color: var(--color-error); border-color: rgba(255,99,99,0.3);">
+    403 Forbidden
+  </div>
+  
+  <h1 style="font-family: var(--font-display); font-size: var(--text-4xl); font-weight: var(--weight-bold); color: var(--color-text-primary); margin-bottom: var(--space-4);">
+    Access Denied
+  </h1>
+  
+  <p style="color: var(--color-text-secondary); font-size: var(--text-base); line-height: var(--leading-relaxed); margin-bottom: var(--space-8);">
+    You do not have administrator permissions to access this page. Please log in with an administrator account or return to the public area.
+  </p>
+  
+  <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
+    <a href="{{ url_for('index') }}" class="btn btn-ghost">
+      <i data-lucide="home" width="16" height="16"></i> Return Home
+    </a>
+    <a href="{{ url_for('search') }}" class="btn btn-primary">
+      <i data-lucide="search" width="16" height="16"></i> Search Products
+    </a>
+  </div>
+</div>
+{% endblock %}

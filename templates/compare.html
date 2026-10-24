@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Side-by-Side Product Comparison — BuyWise AI{% endblock %}
+{% block meta_description %}Side-by-side AI product comparison, specifications matrix, and recommendation verdict.{% endblock %}
+
+{% block extra_css %}
+<style>
+.compare-container { padding: var(--space-8) 0 var(--space-16); }
+
+.winner-banner {
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.15) 0%, rgba(0, 212, 170, 0.15) 100%);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.compare-table-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  overflow-x: auto;
+  margin-bottom: var(--space-8);
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.compare-table th, .compare-table td {
+  padding: var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: top;
+}
+
+.compare-table th {
+  width: 200px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  background: var(--color-surface-2);
+}
+
+.product-picker-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container compare-container">
+
+  <nav aria-label="Breadcrumb" style="margin-bottom: var(--space-4);">
+    <a href="/search" class="btn btn-ghost" style="padding: var(--space-2) var(--space-3); font-size: var(--text-sm);">
+      <i data-lucide="arrow-left" width="16" height="16"></i> Back to Search
+    </a>
+  </nav>
+
+  <div class="section-label">
+    <i data-lucide="columns" width="12" height="12"></i> Multi-Product Evaluation
+  </div>
+  <h1 style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-text-primary); margin-top: 4px; margin-bottom: var(--space-6);">
+    Side-by-Side Product Comparison
+  </h1>
+
+  <!-- AI Winner Banner -->
+  <div class="winner-banner">
+    <div class="section-label" style="background: rgba(0,212,170,0.2); border-color: var(--color-secondary); color: var(--color-secondary);"><i data-lucide="award" width="14" height="14"></i> AI Recommendation Verdict</div>
+    <h2 style="color: var(--color-secondary); font-family: var(--font-display); font-size: var(--text-2xl); margin: 8px 0;">
+      Better Choice: {{ comparison.better_choice }}
+    </h2>
+    <p style="color: var(--color-text-secondary); font-size: var(--text-base); margin-bottom: var(--space-3); font-weight: var(--weight-semibold);">
+      {{ comparison.winner_reason }}
+    </p>
+    <p style="color: var(--color-text-primary); font-size: var(--text-sm); line-height: var(--leading-relaxed); background: var(--color-surface); padding: var(--space-4); border-radius: var(--radius-md); margin: 0;">
+      {{ comparison.comparison_summary }}
+    </p>
+  </div>
+
+  <!-- Comparison Matrix Table -->
+  <div class="compare-table-card">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature / Metric</th>
+          {% for r in comparison.products %}
+            <th style="font-size: var(--text-base); color: var(--color-text-primary); font-weight: bold; min-width: 220px;">
+              <a href="/product/{{ r.product.id }}" style="color: var(--color-text-primary); text-decoration: none;">
+                {{ r.product.name }}
+              </a>
+              {% if r.product.name == comparison.better_choice %}
+                <span class="badge badge-teal" style="display: block; margin-top: 6px; width: fit-content;">🏆 Top Choice</span>
+              {% endif %}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Brand &amp; Category</th>
+          {% for r in comparison.products %}
+            <td>
+              <span class="badge badge-primary">{{ r.product.brand }}</span>
+              <span class="badge badge-teal">{{ r.product.category }}</span>
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>AI Trust Score</th>
+          {% for r in comparison.products %}
+            <td>
+              <strong style="color: {% if r.trust_score >= 75 %}var(--color-success){% elif r.trust_score >= 50 %}var(--color-warning){% else %}var(--color-error){% endif %}; font-size: var(--text-2xl); font-family: var(--font-display);">
+                {{ r.trust_score }} / 100
+              </strong>
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Estimated Price (INR)</th>
+          {% for r in comparison.products %}
+            <td style="font-weight: bold; color: var(--color-secondary);">
+              {{ r.product.price_range or '₹N/A' }}
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Sentiment Positive %</th>
+          {% for r in comparison.products %}
+            <td>
+              <strong style="color: var(--color-success);">{{ r.sentiment_stats.positive_pct or 75 }}%</strong> positive sentiment
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Pros</th>
+          {% for r in comparison.products %}
+            <td>
+              <ul style="padding-left: 16px; color: var(--color-success); font-size: 13px; margin: 0;">
+                {% for pro in r.buying_report.pros %}
+                  <li>{{ pro }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Cons</th>
+          {% for r in comparison.products %}
+            <td>
+              <ul style="padding-left: 16px; color: var(--color-error); font-size: 13px; margin: 0;">
+                {% for con in r.buying_report.cons %}
+                  <li>{{ con }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Best Suited For</th>
+          {% for r in comparison.products %}
+            <td style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">
+              {{ r.buying_report.best_for }}
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Full Report</th>
+          {% for r in comparison.products %}
+            <td>
+              <a href="/product/{{ r.product.id }}" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">
+                View Product Report →
+              </a>
+            </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

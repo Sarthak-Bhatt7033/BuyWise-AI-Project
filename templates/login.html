@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — BuyWise AI{% endblock %}
+{% block meta_description %}Sign in to your BuyWise AI account to access AI-powered product research and trust scores.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+
+  <!-- ════════════════ LEFT BRAND PANEL ════════════════ -->
+  <div class="auth-brand-panel" aria-hidden="true">
+    <div class="brand-blob-1"></div>
+    <div class="brand-blob-2"></div>
+    <div class="brand-blob-3"></div>
+    <div class="brand-grid"></div>
+
+    <!-- Logo -->
+    <a href="{{ url_for('index') }}" class="auth-logo">
+      <div class="auth-logo-mark">✦</div>
+      <span class="auth-logo-text">BuyWise<span> AI</span></span>
+    </a>
+
+    <!-- Main content -->
+    <div class="brand-panel-content">
+      <div class="brand-headline">
+        <h2>Shop with<br>confidence.<br><span style="background:linear-gradient(135deg,#6C63FF,#00D4AA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Buy without regret.</span></h2>
+        <p>BuyWise AI gives you the AI-powered clarity to make purchasing decisions you'll be proud of — every single time.</p>
+      </div>
+
+      <ul class="brand-features">
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="shield-check" width="15" height="15"></i>
+          </div>
+          Fake review detection powered by ML
+        </li>
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="zap" width="15" height="15"></i>
+          </div>
+          Real-time AI trust score for any product
+        </li>
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="git-compare" width="15" height="15"></i>
+          </div>
+          Side-by-side product comparisons
+        </li>
+        <li class="brand-feature-item">
+          <div class="brand-feature-icon">
+            <i data-lucide="bot" width="15" height="15"></i>
+          </div>
+          AI chat assistant for buying advice
+        </li>
+      </ul>
+
+      <!-- Stats -->
+      <div class="brand-stats">
+        <div class="brand-stat-item">
+          <span class="brand-stat-num">50K+</span>
+          <span class="brand-stat-lbl">Products Analyzed</span>
+        </div>
+        <div class="brand-stat-item">
+          <span class="brand-stat-num">98%</span>
+          <span class="brand-stat-lbl">Fake Review Detection</span>
+        </div>
+        <div class="brand-stat-item">
+          <span class="brand-stat-num">25K+</span>
+          <span class="brand-stat-lbl">Happy Users</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-bottom">
+      <p class="brand-quote">"The smartest purchase is the one you actually researched."</p>
+    </div>
+  </div>
+
+  <!-- ════════════════ RIGHT FORM PANEL ════════════════ -->
+  <div class="auth-form-panel">
+    <div class="auth-form-wrapper">
+
+      <!-- Mobile logo -->
+      <a href="{{ url_for('index') }}" class="auth-logo" id="mobile-auth-logo" style="display:none;">
+        <div class="auth-logo-mark" style="width:36px;height:36px;font-size:17px;">✦</div>
+        <span class="auth-logo-text" style="font-size:1.05rem;">BuyWise<span> AI</span></span>
+      </a>
+
+      <!-- Header -->
+      <div class="auth-form-header">
+        <h1>Welcome back 👋</h1>
+        <p>New here? <a href="{{ url_for('register') }}">Create a free account →</a></p>
+      </div>
+
+      <!-- Server-side error -->
+      {% if error %}
+      <div class="auth-flash error" role="alert">
+        <i data-lucide="alert-circle" width="15" height="15"></i>
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <!-- LOGIN FORM -->
+      <form class="auth-form" id="login-form" method="POST" action="{{ url_for('login') }}" novalidate>
+        <input type="hidden" name="next" value="{{ request.args.get('next', next_url or '') }}">
+
+        <!-- Email -->
+        <div class="field-wrap">
+          <label class="field-label" for="email">Email Address</label>
+          <div class="input-shell">
+            <span class="input-icon-left">
+              <i data-lucide="mail" width="16" height="16"></i>
+            </span>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="input-field"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            >
+          </div>
+          <div class="field-error" id="email-error"></div>
+        </div>
+
+        <!-- Password -->
+        <div class="field-wrap">
+          <label class="field-label" for="password">Password</label>
+          <div class="input-shell">
+            <span class="input-icon-left">
+              <i data-lucide="lock" width="16" height="16"></i>
+            </span>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="input-field has-trail"
+              placeholder="Your password"
+              autocomplete="current-password"
+              required
+            >
+            <button type="button" class="input-icon-right" data-toggle-password="password" aria-label="Toggle password visibility">
+              <span class="eye-open"><i data-lucide="eye" width="16" height="16"></i></span>
+              <span class="eye-close" style="display:none;"><i data-lucide="eye-off" width="16" height="16"></i></span>
+            </button>
+          </div>
+          <div class="field-error" id="password-error"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="form-controls">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember" id="remember" class="checkbox-input">
+            <span>Remember me for 30 days</span>
+          </label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="auth-submit" id="login-submit">
+          <span class="btn-text">
+            <i data-lucide="log-in" width="17" height="17"></i>
+            Sign In
+          </span>
+          <span class="btn-spinner">
+            <div class="spinner" style="width:18px;height:18px;border-color:rgba(255,255,255,0.35);border-top-color:#fff;"></div>
+            <span style="margin-left:0.5rem;">Signing in…</span>
+          </span>
+        </button>
+
+      </form>
+
+      <!-- Bottom note -->
+      <p class="auth-note">
+        By signing in, you agree to our
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </p>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .navbar { display: none; }
+  @media (max-width: 900px) {
+    #mobile-auth-logo { display: flex !important; }
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth-validation.js') }}"></script>
+{% endblock %}

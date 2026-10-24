@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard — BuyWise AI{% endblock %}
+{% block meta_description %}User dashboard for managing wishlists, search history, submitted reviews, and saved product
+comparisons.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .user-dash-container {
+    padding: var(--space-8) 0 var(--space-16);
+  }
+
+  .user-header-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6) var(--space-8);
+    margin-bottom: var(--space-8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-8);
+  }
+
+  @media (max-width: 900px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .dash-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .dash-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+  }
+
+  .wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .wishlist-item {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .history-list {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--space-2);
+  }
+
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+    font-size: var(--text-sm);
+  }
+
+  .history-item a {
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .history-item a:hover {
+    color: var(--color-primary);
+  }
+
+  .review-item-card {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+
+  .saved-comp-card {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container user-dash-container">
+
+  <!-- User Banner -->
+  <div class="user-header-card">
+    <div>
+      <div style="display: flex; gap: var(--space-2); align-items: center;">
+        <span class="badge badge-primary">Member Account</span>
+        {% if user.role == 'admin' %}
+        <span class="badge badge-amber">Administrator</span>
+        {% endif %}
+      </div>
+      <h1
+        style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-text-primary); margin-top: 6px;">
+        Welcome, {{ user.full_name }}
+      </h1>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: 2px;">Email: {{ user.email }}
+      </p>
+    </div>
+
+    <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+      <a href="{{ url_for('submit_review_page') }}" class="btn btn-ghost">
+        <i data-lucide="edit-3" width="16" height="16"></i> Write Review
+      </a>
+      <a href="{{ url_for('search') }}" class="btn btn-primary">
+        <i data-lucide="search" width="16" height="16"></i> Search Products
+      </a>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div>
+      <!-- Wishlist Section -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3 style="color: var(--color-text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="heart" width="20" height="20" style="color: var(--color-accent-rose);"></i>
+            My Wishlist ({{ wishlist|length }})
+          </h3>
+          <a href="{{ url_for('search') }}" style="font-size: var(--text-xs); color: var(--color-primary);">+ Add
+            more</a>
+        </div>
+
+        <div class="wishlist-grid">
+          {% for p in wishlist %}
+          <div class="wishlist-item">
+            <div>
+              <span class="badge badge-teal" style="font-size: 10px;">{{ p.category }}</span>
+              <h4 style="font-size: var(--text-base); color: var(--color-text-primary); margin: 6px 0;">{{ p.name }}
+              </h4>
+              <div
+                style="font-size: var(--text-sm); color: var(--color-success); font-weight: bold; margin-bottom: 8px;">
+                Trust Score: {{ p.trust_score }} / 100
+              </div>
+            </div>
+            <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3);">
+              <a href="/product/{{ p.id }}" class="btn btn-ghost"
+                style="flex: 1; padding: 4px; justify-content: center; font-size: 12px;">View Report</a>
+              <button class="btn btn-ghost" onclick="removeWishlist({{ p.id }})"
+                style="padding: 4px 8px; color: var(--color-error); font-size: 12px;"
+                title="Remove from wishlist">✕</button>
+            </div>
+          </div>
+          {% else %}
+          <div
+            style="grid-column: 1 / -1; color: var(--color-text-muted); font-size: var(--text-sm); padding: var(--space-4) 0;">
+            Your wishlist is empty. Browse products and click the <i data-lucide="heart" width="14" height="14"
+              style="vertical-align: middle;"></i> icon to save them here!
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- My Submitted Reviews Section -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3 style="color: var(--color-text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="message-square" width="20" height="20" style="color: var(--color-primary);"></i>
+            My Community Reviews ({{ user_reviews|length }})
+          </h3>
+          <a href="{{ url_for('submit_review_page') }}" class="btn btn-ghost"
+            style="padding: 4px 10px; font-size: 12px;">
+            <i data-lucide="plus" width="14" height="14"></i> Write Review
+          </a>
+        </div>
+
+        {% if user_reviews %}
+        <div>
+          {% for r in user_reviews %}
+          <div class="review-item-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <a href="/product/{{ r.product_id }}"
+                style="font-weight: bold; color: var(--color-text-primary); text-decoration: none;">
+                {{ r.product_name }}
+              </a>
+              <span style="color: var(--color-accent-amber); font-weight: bold; font-size: var(--text-sm);">★ {{
+                r.rating }}</span>
+            </div>
+            <p
+              style="color: var(--color-text-secondary); font-size: var(--text-sm); margin: 0; line-height: var(--leading-relaxed);">
+              {{ r.review_text }}
+            </p>
+            <div style="font-size: 11px; color: var(--color-text-muted); margin-top: 6px;">
+              Submitted on {{ (r.created_at|string)[:10] if r.created_at else 'Recent' }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="color: var(--color-text-muted); font-size: var(--text-sm); padding: var(--space-2) 0;">
+          You haven't submitted any reviews yet. Share your experience with a product to help the community!
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Saved Comparisons Section -->
+      {% if saved_comparisons %}
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <h3 style="color: var(--color-text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="columns" width="20" height="20" style="color: var(--color-secondary);"></i>
+            Saved Comparisons ({{ saved_comparisons|length }})
+          </h3>
+        </div>
+
+        <div>
+          {% for c in saved_comparisons %}
+          <div class="saved-comp-card">
+            <div>
+              <strong style="color: var(--color-text-primary);">{{ c.title or 'Product Comparison' }}</strong>
+              <div style="font-size: 11px; color: var(--color-text-muted);">
+                Saved on {{ (c.created_at|string)[:10] if c.created_at else '' }}
+              </div>
+            </div>
+            <a href="/compare?ids={{ c.product_ids }}" class="btn btn-ghost"
+              style="padding: 4px 10px; font-size: 12px;">
+              View Comparison →
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <!-- Recent Search History Section -->
+      <div class="dash-card">
+        <h3
+          style="color: var(--color-text-primary); margin-top: 0; margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="history" width="20" height="20" style="color: var(--color-primary);"></i>
+          Recent Searches
+        </h3>
+
+        <ul class="history-list">
+          {% for item in search_history %}
+          <li class="history-item">
+            <a href="{{ url_for('search') }}?q={{ item.query }}">
+              <i data-lucide="search" width="12" height="12"
+                style="color: var(--color-text-muted); margin-right: 4px;"></i>
+              {{ item.query }}
+            </a>
+            <span style="color: var(--color-text-muted); font-size: 11px;">{{ (item.searched_at|string)[:10] if
+              item.searched_at else '' }}</span>
+          </li>
+          {% else %}
+          <li style="color: var(--color-text-muted); font-size: var(--text-sm); padding: 8px 0;">No recent searches
+            logged.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Quick Platform Actions Card -->
+      <div class="dash-card">
+        <h3 style="color: var(--color-text-primary); margin-top: 0; margin-bottom: var(--space-3);">
+          Decision Tools
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+          <a href="{{ url_for('search') }}" class="btn btn-primary" style="justify-content: center; width: 100%;">
+            <i data-lucide="search" width="16" height="16"></i> Search Any Product
+          </a>
+          <!-- <a href="{{ url_for('compare_page') }}" class="btn btn-ghost" style="justify-content: center; width: 100%;">
+            <i data-lucide="columns" width="16" height="16"></i> Side-by-Side Comparison
+          </a> -->
+          <a href="{{ url_for('submit_review_page') }}" class="btn btn-ghost"
+            style="justify-content: center; width: 100%;">
+            <i data-lucide="edit-3" width="16" height="16"></i> Submit a Review
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function removeWishlist(productId) {
+    try {
+      const res = await fetch('/api/user/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      }
+    } catch (err) {
+      alert('Failed to update wishlist: ' + err.message);
+    }
+  }
+</script>
+{% endblock %}

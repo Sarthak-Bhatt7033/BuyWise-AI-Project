@@ -1,0 +1,768 @@
+{% extends "base.html" %}
+
+{% block title %}Map Dataset Columns — {{ dataset.name or dataset.filename }} — BuyWise AI{% endblock %}
+{% block meta_description %}Configure column mappings, inspect dataset profiling information, and specify import limits.{% endblock %}
+
+{% block extra_css %}
+<style>
+.mapper-container { padding: var(--space-8) 0 var(--space-16); }
+
+.mapper-header-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-8);
+  margin-bottom: var(--space-6);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.mapper-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.mapper-card-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── Row Limit Selector ── */
+.limit-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.limit-preset-card {
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.limit-preset-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.limit-preset-card input[type="radio"] {
+  display: none;
+}
+
+.limit-preset-title {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+.limit-preset-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ── Mapping Grid ── */
+.mapping-section-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin: var(--space-4) 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mapping-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.mapping-field {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  transition: border-color 0.2s ease;
+}
+
+.mapping-field.mandatory {
+  border-left: 3px solid var(--color-primary);
+}
+
+.mapping-field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+  font-weight: var(--weight-semibold);
+}
+
+.mapping-field select {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+}
+
+.mapping-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.mapping-hint {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.required-badge {
+  display: inline-block;
+  background: rgba(255,99,99,0.15);
+  color: var(--color-error);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.optional-badge {
+  display: inline-block;
+  background: rgba(108,99,255,0.1);
+  color: var(--color-primary);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+/* ── Column Profiling Table ── */
+.col-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+}
+
+.col-info-table th, .col-info-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: var(--text-sm);
+  vertical-align: middle;
+}
+
+.col-info-table th {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+.sample-chip {
+  display: inline-block;
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--color-text-primary);
+  margin: 2px 4px 2px 0;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.type-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.type-pill.text { background: rgba(108,99,255,0.15); color: var(--color-primary); }
+.type-pill.numeric { background: rgba(0,212,170,0.15); color: var(--color-secondary); }
+.type-pill.boolean { background: rgba(245,158,11,0.15); color: var(--color-accent-amber); }
+.type-pill.date { background: rgba(255,107,107,0.15); color: var(--color-accent-rose); }
+
+/* ── Preview Table ── */
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+  overflow-x: auto;
+  display: block;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.preview-table th, .preview-table td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  text-align: left;
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-table th {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  position: sticky;
+  top: 0;
+}
+
+.preview-table td { color: var(--color-text-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mapper-container">
+
+  <!-- Breadcrumb -->
+  <nav style="margin-bottom: var(--space-4);">
+    <a href="{{ url_for('admin_data') }}" class="btn btn-ghost" style="padding: var(--space-2) var(--space-3); font-size: var(--text-sm);">
+      <i data-lucide="arrow-left" width="16" height="16"></i> Back to Data Hub
+    </a>
+  </nav>
+
+  <!-- Header Card with Dataset Stats -->
+  <div class="mapper-header-card">
+    <div>
+      <div class="section-label">
+        <i data-lucide="columns" width="12" height="12"></i> Step 2 of 2 — Column Mapping &amp; Ingestion
+      </div>
+      <h1 style="font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-text-primary); margin-top: 4px;">
+        {{ dataset.name or dataset.original_filename or dataset.filename }}
+      </h1>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-top: 2px;">
+        File: <span style="color: var(--color-text-primary); font-family: monospace;">{{ dataset.filename }}</span>
+      </p>
+    </div>
+
+    <div style="display: flex; gap: var(--space-4); align-items: center; flex-wrap: wrap;">
+      <div style="text-align: right;">
+        <div style="font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase;">Estimated Total Records</div>
+        <div style="font-size: var(--text-2xl); font-weight: bold; color: var(--color-primary); font-family: var(--font-display);">
+          ~{{ "{:,}".format(preview.estimated_total_rows or preview.rows|length) }}
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase;">Columns Found</div>
+        <div style="font-size: var(--text-2xl); font-weight: bold; color: var(--color-secondary); font-family: var(--font-display);">
+          {{ preview.total_columns or preview.columns|length }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 1: IMPORT CONFIGURATION (ROW LIMIT & MAPPING)
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="mapper-card">
+    <div class="mapper-card-title">
+      <i data-lucide="sliders" width="20" height="20" style="color: var(--color-primary);"></i>
+      1. Choose How Many Rows to Import
+    </div>
+    
+    <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-4);">
+      Select the volume of reviews to import from this dataset into the review records pool:
+    </p>
+
+    <!-- Row Limit Presets -->
+    <div class="limit-presets-grid">
+      <label class="limit-preset-card selected" onclick="selectRowLimit(0, this)">
+        <input type="radio" name="row_limit_preset" value="0" checked>
+        <div class="limit-preset-title">⚡ All Rows</div>
+        <div class="limit-preset-desc">Full dataset import (All ~{{ "{:,}".format(preview.estimated_total_rows or preview.rows|length) }} rows)</div>
+      </label>
+
+      <label class="limit-preset-card" onclick="selectRowLimit(500, this)">
+        <input type="radio" name="row_limit_preset" value="500">
+        <div class="limit-preset-title">🏎️ Top 500 Rows</div>
+        <div class="limit-preset-desc">Fast import for quick testing</div>
+      </label>
+
+      <label class="limit-preset-card" onclick="selectRowLimit(1000, this)">
+        <input type="radio" name="row_limit_preset" value="1000">
+        <div class="limit-preset-title">📦 Top 1,000 Rows</div>
+        <div class="limit-preset-desc">Standard balanced batch</div>
+      </label>
+
+      <label class="limit-preset-card" onclick="selectRowLimit(5000, this)">
+        <input type="radio" name="row_limit_preset" value="5000">
+        <div class="limit-preset-title">🚀 Top 5,000 Rows</div>
+        <div class="limit-preset-desc">Large representative volume</div>
+      </label>
+
+      <label class="limit-preset-card" onclick="selectRowLimit('custom', this)">
+        <input type="radio" name="row_limit_preset" value="custom">
+        <div class="limit-preset-title">✏️ Custom Count</div>
+        <div class="limit-preset-desc">Enter specific row limit</div>
+      </label>
+    </div>
+
+    <!-- Custom Row Count Input (Hidden by default) -->
+    <div id="custom-row-box" style="display: none; background: var(--color-surface-2); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); border: 1px solid var(--color-border);">
+      <label style="display: block; font-size: var(--text-sm); font-weight: bold; color: var(--color-text-primary); margin-bottom: var(--space-2);">
+        Specify Exact Number of Rows to Import:
+      </label>
+      <div style="display: flex; gap: var(--space-3); align-items: center;">
+        <input type="number" id="custom-rows-input" class="search-input" min="1" max="100000" placeholder="e.g. 2500" style="width: 200px; padding: var(--space-2) var(--space-3);" oninput="updateIngestButtonText()">
+        <span style="font-size: var(--text-xs); color: var(--color-text-muted);">rows will be processed from the top of the file</span>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SECTION 2: COLUMN MAPPINGS (MANDATORY & OPTIONAL)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <div class="mapper-card-title" style="margin-top: var(--space-8);">
+      <i data-lucide="git-merge" width="20" height="20" style="color: var(--color-secondary);"></i>
+      2. Map Dataset Columns to Platform Fields
+    </div>
+
+    <!-- Mandatory Fields -->
+    <div class="mapping-section-title">
+      <i data-lucide="alert-circle" width="16" height="16" style="color: var(--color-primary);"></i>
+      Mandatory Core Fields (Required)
+    </div>
+
+    <div class="mapping-grid">
+      <!-- Product Name (Mandatory) -->
+      <div class="mapping-field mandatory">
+        <label>
+          <span>📦 Product Name Column</span>
+          <span class="required-badge">Mandatory</span>
+        </label>
+        <select id="map-product" name="product_col" onchange="highlightMappedField(this)">
+          <option value="">— Select Product Column —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.product_col == col %}selected{% elif not mapping and preview.auto_mapping.product_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Canonical product name or title used to group and match reviews.</div>
+      </div>
+
+      <!-- Review Text (Mandatory) -->
+      <div class="mapping-field mandatory">
+        <label>
+          <span>💬 Review Text Column</span>
+          <span class="required-badge">Mandatory</span>
+        </label>
+        <select id="map-review" name="review_col" onchange="highlightMappedField(this)">
+          <option value="">— Select Review Column —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.review_col == col %}selected{% elif not mapping and preview.auto_mapping.review_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Customer review body, comment text, or feedback paragraph.</div>
+      </div>
+    </div>
+
+    <!-- Optional Review Fields -->
+    <div class="mapping-section-title">
+      <i data-lucide="star" width="16" height="16" style="color: var(--color-accent-amber);"></i>
+      Optional Review Metadata Fields
+    </div>
+
+    <div class="mapping-grid">
+      <!-- Star Rating (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>⭐ Star Rating Column</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-rating" name="rating_col">
+          <option value="">— Not Mapped (Defaults to 5.0) —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.rating_col == col %}selected{% elif not mapping and preview.auto_mapping.rating_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Numeric score or star rating (1.0 to 5.0).</div>
+      </div>
+
+      <!-- Sentiment (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>🎭 Pre-labeled Sentiment</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-sentiment" name="sentiment_col">
+          <option value="">— Not Mapped (Auto-analyzed via VADER) —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.sentiment_col == col %}selected{% elif not mapping and preview.auto_mapping.sentiment_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Pre-existing sentiment labels (Positive/Negative/Neutral). Auto-inferred if unmapped.</div>
+      </div>
+
+      <!-- Verified Purchase (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>🛡️ Verified Purchase Column</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-verified" name="verified_col">
+          <option value="">— Not Mapped (Defaults to Unverified) —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.verified_col == col %}selected{% elif not mapping and preview.auto_mapping.verified_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Flags verified buyer submissions (1/0, True/False, Yes/No).</div>
+      </div>
+
+      <!-- Reviewer Name (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>👤 Reviewer Name / Author</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-user" name="user_name_col">
+          <option value="">— Not Mapped (Defaults to Verified Reviewer) —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.user_name_col == col %}selected{% elif not mapping and preview.auto_mapping.user_name_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Customer profile name or author identifier.</div>
+      </div>
+    </div>
+
+    <!-- Optional Product Catalog Fields -->
+    <div class="mapping-section-title">
+      <i data-lucide="tag" width="16" height="16" style="color: var(--color-secondary);"></i>
+      Optional Product Catalog Fields
+    </div>
+
+    <div class="mapping-grid">
+      <!-- Price (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>💰 Product Price Column</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-price" name="price_col">
+          <option value="">— Not Mapped —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.price_col == col %}selected{% elif not mapping and preview.auto_mapping.price_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Sets estimated Indian Rupee price for newly created product stubs.</div>
+      </div>
+
+      <!-- Brand (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>🏷️ Brand Name Column</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-brand" name="brand_col">
+          <option value="">— Not Mapped (Defaults to Dataset Brand) —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.brand_col == col %}selected{% elif not mapping and preview.auto_mapping.brand_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Assigns brand name to products for brand-level filtering.</div>
+      </div>
+
+      <!-- Category (Optional) -->
+      <div class="mapping-field">
+        <label>
+          <span>📂 Product Category Column</span>
+          <span class="optional-badge">Optional</span>
+        </label>
+        <select id="map-category" name="category_col">
+          <option value="">— Not Mapped (Defaults to General) —</option>
+          {% for col in preview.columns %}
+            <option value="{{ col }}" {% if mapping and mapping.category_col == col %}selected{% elif not mapping and preview.auto_mapping.category_col == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+        <div class="mapping-hint">Assigns category for similar product matching and personalization.</div>
+      </div>
+    </div>
+
+    <!-- Ingestion Buttons -->
+    <div style="display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center; flex-wrap: wrap; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border-subtle);">
+      <a href="{{ url_for('admin_data') }}" class="btn btn-ghost">Cancel</a>
+      <button class="btn btn-primary" onclick="confirmAndIngest()" id="ingest-btn">
+        <i data-lucide="play" width="16" height="16"></i> <span id="ingest-btn-label">Confirm &amp; Ingest All Records</span>
+      </button>
+    </div>
+
+    <div id="ingest-msg" style="margin-top: var(--space-4); font-size: var(--text-sm);"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 3: COLUMN INFORMATION & DATA PROFILING STATS
+       ══════════════════════════════════════════════════════════════════════ -->
+  {% if preview and preview.columns_info %}
+  <div class="mapper-card">
+    <div class="mapper-card-title">
+      <i data-lucide="info" width="20" height="20" style="color: var(--color-primary);"></i>
+      Column Information &amp; Data Profiling
+      <span class="badge badge-outline" style="font-size: 10px; margin-left: auto;">{{ preview.columns_info|length }} Columns Profiled</span>
+    </div>
+
+    <p style="color: var(--color-text-secondary); font-size: var(--text-sm); margin-bottom: var(--space-4);">
+      Detailed metadata, detected data types, fill rates, and sample values extracted from the uploaded file:
+    </p>
+
+    <div style="overflow-x: auto;">
+      <table class="col-info-table">
+        <thead>
+          <tr>
+            <th>Column Name</th>
+            <th>Inferred Type</th>
+            <th>Fill Rate</th>
+            <th>Unique Values</th>
+            <th>Sample Preview Values</th>
+            <th>Auto-Detected Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for info in preview.columns_info %}
+            <tr>
+              <td>
+                <strong style="color: var(--color-text-primary); font-family: monospace;">{{ info.name }}</strong>
+              </td>
+              <td>
+                <span class="type-pill {% if 'Number' in info.type %}numeric{% elif 'Boolean' in info.type %}boolean{% elif 'Date' in info.type %}date{% else %}text{% endif %}">
+                  {{ info.type }}
+                </span>
+              </td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="background: var(--color-surface-3); width: 60px; height: 6px; border-radius: 3px; overflow: hidden;">
+                    <div style="background: {% if info.fill_rate_pct >= 90 %}var(--color-success){% elif info.fill_rate_pct >= 50 %}var(--color-accent-amber){% else %}var(--color-error){% endif %}; width: {{ info.fill_rate_pct }}%; height: 100%;"></div>
+                  </div>
+                  <span style="font-size: 12px; font-weight: bold; color: var(--color-text-primary);">{{ info.fill_rate_pct }}%</span>
+                </div>
+              </td>
+              <td style="color: var(--color-text-secondary); font-size: 12px;">
+                {{ info.unique_count }} unique
+              </td>
+              <td>
+                <div>
+                  {% for s in info.sample_values %}
+                    <span class="sample-chip" title="{{ s }}">{{ s }}</span>
+                  {% else %}
+                    <span style="color: var(--color-text-muted); font-size: 11px;">(Empty column)</span>
+                  {% endfor %}
+                </div>
+              </td>
+              <td>
+                {% if info.suggested_role %}
+                  <span class="badge badge-teal" style="font-size: 10px;">{{ info.suggested_role }}</span>
+                {% else %}
+                  <span style="color: var(--color-text-muted); font-size: 11px;">Unassigned</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 4: RAW DATA PREVIEW (FIRST ROWS)
+       ══════════════════════════════════════════════════════════════════════ -->
+  {% if preview and preview.rows %}
+  <div class="mapper-card">
+    <div class="mapper-card-title">
+      <i data-lucide="eye" width="20" height="20" style="color: var(--color-secondary);"></i>
+      Raw Data Preview (First {{ preview.rows|length }} rows)
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            {% for col in preview.columns %}
+              <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in preview.rows %}
+            <tr>
+              {% if row is mapping %}
+                {% for col in preview.columns %}
+                  <td title="{{ row.get(col, '') }}">{{ row.get(col, '') }}</td>
+                {% endfor %}
+              {% else %}
+                {% for cell in row %}
+                  <td title="{{ cell if cell is not none else '' }}">{{ cell if cell is not none else '' }}</td>
+                {% endfor %}
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const datasetId = {{ dataset.id }};
+let selectedRowLimit = 0; // 0 = All rows
+
+function selectRowLimit(val, cardEl) {
+  document.querySelectorAll('.limit-preset-card').forEach(c => c.classList.remove('selected'));
+  cardEl.classList.add('selected');
+  const radio = cardEl.querySelector('input[type="radio"]');
+  if (radio) radio.checked = true;
+
+  const customBox = document.getElementById('custom-row-box');
+  if (val === 'custom') {
+    customBox.style.display = 'block';
+    const inputVal = parseInt(document.getElementById('custom-rows-input').value) || 1000;
+    selectedRowLimit = inputVal;
+  } else {
+    customBox.style.display = 'none';
+    selectedRowLimit = parseInt(val) || 0;
+  }
+  updateIngestButtonText();
+}
+
+function updateIngestButtonText() {
+  const customBox = document.getElementById('custom-row-box');
+  let label = 'Confirm & Ingest All Records';
+  if (customBox.style.display !== 'none') {
+    const inputVal = parseInt(document.getElementById('custom-rows-input').value) || 0;
+    if (inputVal > 0) {
+      selectedRowLimit = inputVal;
+      label = `Confirm & Ingest Top ${inputVal.toLocaleString()} Records`;
+    }
+  } else if (selectedRowLimit > 0) {
+    label = `Confirm & Ingest Top ${selectedRowLimit.toLocaleString()} Records`;
+  }
+  document.getElementById('ingest-btn-label').textContent = label;
+}
+
+function highlightMappedField(selectEl) {
+  if (selectEl.value) {
+    selectEl.style.borderColor = 'var(--color-primary)';
+  } else {
+    selectEl.style.borderColor = 'var(--color-border)';
+  }
+}
+
+async function confirmAndIngest() {
+  const productCol   = document.getElementById('map-product').value;
+  const reviewCol    = document.getElementById('map-review').value;
+  const ratingCol    = document.getElementById('map-rating').value;
+  const sentimentCol = document.getElementById('map-sentiment').value;
+  const priceCol     = document.getElementById('map-price').value;
+  const brandCol     = document.getElementById('map-brand').value;
+  const categoryCol  = document.getElementById('map-category').value;
+  const verifiedCol  = document.getElementById('map-verified').value;
+  const userCol      = document.getElementById('map-user').value;
+
+  const msg = document.getElementById('ingest-msg');
+  const btn = document.getElementById('ingest-btn');
+
+  // Validate mandatory columns
+  if (!productCol) {
+    msg.innerHTML = '<span style="color:var(--color-error); font-weight:bold;">✗ Please select a Product Name column (Mandatory).</span>';
+    document.getElementById('map-product').focus();
+    return;
+  }
+  if (!reviewCol) {
+    msg.innerHTML = '<span style="color:var(--color-error); font-weight:bold;">✗ Please select a Review Text column (Mandatory).</span>';
+    document.getElementById('map-review').focus();
+    return;
+  }
+
+  // Determine row limit
+  let limitToSend = null;
+  if (document.getElementById('custom-row-box').style.display !== 'none') {
+    const val = parseInt(document.getElementById('custom-rows-input').value);
+    if (val && val > 0) limitToSend = val;
+  } else if (selectedRowLimit > 0) {
+    limitToSend = selectedRowLimit;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;"></div> Ingesting records…';
+  msg.innerHTML = `<span style="color:var(--color-primary);">Ingesting ${limitToSend ? limitToSend.toLocaleString() + ' records' : 'all records'} — this may take a moment…</span>`;
+
+  try {
+    const res = await fetch(`/api/admin/datasets/${datasetId}/reingest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_col:   productCol,
+        review_col:    reviewCol,
+        rating_col:    ratingCol    || null,
+        sentiment_col: sentimentCol || null,
+        price_col:     priceCol     || null,
+        brand_col:     brandCol     || null,
+        category_col:  categoryCol  || null,
+        verified_col:  verifiedCol  || null,
+        user_name_col: userCol      || null,
+        max_rows:      limitToSend,
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const rowCount = data.dataset?.row_count || 0;
+      msg.innerHTML = `<span style="color:var(--color-success); font-weight:bold;">✓ Ingestion successful! ${rowCount.toLocaleString()} review records imported &amp; products cataloged.</span> <a href="{{ url_for('admin_data') }}" class="btn btn-primary" style="padding:4px 12px;font-size:12px;margin-left:8px;">← Return to Data Hub</a>`;
+      setTimeout(() => {
+        window.location.href = "{{ url_for('admin_data') }}";
+      }, 2000);
+    } else {
+      msg.innerHTML = `<span style="color:var(--color-error);">✗ Ingestion failed: ${data.error || 'Unknown error occurred.'}</span>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="play" width="16" height="16"></i> <span id="ingest-btn-label">Confirm & Ingest</span>';
+      lucide.createIcons();
+    }
+  } catch (err) {
+    msg.innerHTML = `<span style="color:var(--color-error);">✗ Network error: ${err.message}</span>`;
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="play" width="16" height="16"></i> <span id="ingest-btn-label">Confirm & Ingest</span>';
+    lucide.createIcons();
+  }
+}
+</script>
+{% endblock %}

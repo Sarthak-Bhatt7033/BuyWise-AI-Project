@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}BuyWise AI — Know Before You Buy{% endblock %}
+{% block meta_description %}BuyWise AI uses artificial intelligence to help you make smarter purchasing decisions. Get
+AI-powered product analysis, trust scores, and detailed buying reports.{% endblock %}
+
+{% block three_js_cdn %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="home-page">
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       HERO SECTION
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero" aria-label="Hero">
+    <!-- Background elements -->
+    <div class="hero-bg-glow" aria-hidden="true">
+      <div class="hero-glow-1"></div>
+      <div class="hero-glow-2"></div>
+    </div>
+    <div class="hero-grid-pattern" aria-hidden="true"></div>
+
+    <div class="hero-inner">
+      <!-- Left: Content -->
+      <div class="hero-content">
+        <div class="hero-eyebrow" role="text">
+          <div class="eyebrow-dot" aria-hidden="true"></div>
+          AI-Powered Product Intelligence
+        </div>
+
+        <h1 class="hero-title">
+          Know Before<br>
+          You <span class="gradient-text">Buy.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          BuyWise AI analyzes thousands of reviews, detects fake ratings, and delivers
+          an honest trust score — so you can shop with confidence, not guesswork.
+        </p>
+
+        <div class="hero-cta">
+          <a href="{{ url_for('search') }}" class="btn btn-primary btn-lg" id="hero-cta-primary">
+            <i data-lucide="search" width="18" height="18"></i>
+            <span>Search a Product</span>
+          </a>
+          <a href="#how-it-works" class="btn btn-ghost btn-lg" id="hero-cta-secondary">
+            <i data-lucide="play-circle" width="18" height="18"></i>
+            <span>How It Works</span>
+          </a>
+        </div>
+
+        <div class="hero-trust-badges">
+          <div class="trust-badge">
+            <i data-lucide="shield-check" width="16" height="16" class="trust-icon"></i>
+            <span>No fake reviews</span>
+          </div>
+          <div class="trust-badge">
+            <i data-lucide="zap" width="16" height="16" class="trust-icon"></i>
+            <span>Instant AI analysis</span>
+          </div>
+          <div class="trust-badge">
+            <i data-lucide="lock" width="16" height="16" class="trust-icon"></i>
+            <span>Always free</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Three.js 3D Canvas -->
+      <div class="hero-visual" aria-hidden="true">
+        <canvas id="three-canvas"></canvas>
+        <div class="hero-canvas-ring"></div>
+
+        <!-- Floating data cards -->
+        <div class="hero-float-card hero-float-card-1">
+          <div class="float-card-icon violet">
+            <i data-lucide="shield" width="18" height="18"></i>
+          </div>
+          <div class="float-card-text">
+            <span class="float-card-label">Trust Score</span>
+            <span class="float-card-value">92 / 100</span>
+          </div>
+        </div>
+
+        <div class="hero-float-card hero-float-card-2">
+          <div class="float-card-icon teal">
+            <i data-lucide="trending-up" width="18" height="18"></i>
+          </div>
+          <div class="float-card-text">
+            <span class="float-card-label">Reviews Analyzed</span>
+            <span class="float-card-value">12,482</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile fallback (no canvas) -->
+      <div class="hero-mobile-visual" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       HOW IT WORKS
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="section how-it-works" id="how-it-works" aria-labelledby="hiw-heading">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">
+          <i data-lucide="map" width="12" height="12"></i>
+          Process
+        </div>
+        <h2 id="hiw-heading">How BuyWise AI Works</h2>
+        <p>From a simple search to a full buying report in seconds. Our AI does the heavy lifting so you don't have to.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-number">
+            <i data-lucide="search" width="24" height="24" class="step-icon"></i>
+            <span class="step-num-label">1</span>
+          </div>
+          <h3 class="step-title">Search Any Product</h3>
+          <p class="step-description">Type any product name, model number, or category. Our AI understands natural
+            language queries perfectly.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-number">
+            <i data-lucide="cpu" width="24" height="24" class="step-icon"></i>
+            <span class="step-num-label">2</span>
+          </div>
+          <h3 class="step-title">AI Analysis</h3>
+          <p class="step-description">Our AI engine reads thousands of reviews, cross-references spec sheets, and
+            detects manipulation patterns.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-number">
+            <i data-lucide="shield-check" width="24" height="24" class="step-icon"></i>
+            <span class="step-num-label">3</span>
+          </div>
+          <h3 class="step-title">Trust Score</h3>
+          <p class="step-description">A single, honest 0–100 trust score that reflects real product quality, review
+            authenticity, and value.</p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+          <div class="step-number">
+            <i data-lucide="file-text" width="24" height="24" class="step-icon"></i>
+            <span class="step-num-label">4</span>
+          </div>
+          <h3 class="step-title">Buying Report</h3>
+          <p class="step-description">Get a detailed breakdown — pros, cons, alternatives, and a clear recommendation
+            tailored to your needs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       FEATURES
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="section features" id="features" aria-labelledby="features-heading">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">
+          <i data-lucide="sparkles" width="12" height="12"></i>
+          Capabilities
+        </div>
+        <h2 id="features-heading">Everything You Need to <span class="gradient-text">Shop Smarter</span></h2>
+        <p>Six powerful AI modules working together to give you the clearest picture of any product on the market.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrap feature-icon-violet">
+            <i data-lucide="file-search" width="24" height="24"></i>
+          </div>
+          <h3 class="feature-title">AI Buying Reports</h3>
+          <p class="feature-description">Comprehensive analysis of any product including specs, real-world performance,
+            and who it's best suited for.</p>
+          <span class="badge badge-primary feature-tag">Core</span>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrap feature-icon-teal">
+            <i data-lucide="shield-check" width="24" height="24"></i>
+          </div>
+          <h3 class="feature-title">Trust Score Engine</h3>
+          <p class="feature-description">A 0–100 score derived from review authenticity, seller reputation, return
+            rates, and build quality signals.</p>
+          <span class="badge badge-teal feature-tag">Signature</span>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrap feature-icon-amber">
+            <i data-lucide="message-square" width="24" height="24"></i>
+          </div>
+          <h3 class="feature-title">Sentiment Analysis</h3>
+          <p class="feature-description">Understand the emotional tone of thousands of reviews — beyond star ratings,
+            into what people actually feel.</p>
+          <span class="badge badge-amber feature-tag">Advanced</span>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrap feature-icon-rose">
+            <i data-lucide="alert-triangle" width="24" height="24"></i>
+          </div>
+          <h3 class="feature-title">Fake Review Detection</h3>
+          <p class="feature-description">Our ML models identify bot-generated reviews, incentivized ratings, and
+            suspicious rating patterns in real time.</p>
+          <span class="badge badge-primary feature-tag">AI-Powered</span>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrap feature-icon-teal">
+            <i data-lucide="git-compare" width="24" height="24"></i>
+          </div>
+          <h3 class="feature-title">Product Comparison</h3>
+          <p class="feature-description">Compare up to 4 products side-by-side across price, specs, trust scores, and
+            user satisfaction metrics.</p>
+          <span class="badge badge-teal feature-tag">Coming Soon</span>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrap feature-icon-violet">
+            <i data-lucide="bot" width="24" height="24"></i>
+          </div>
+          <h3 class="feature-title">AI Chat Assistant</h3>
+          <p class="feature-description">Ask follow-up questions, get personalized recommendations, and dig deeper into
+            any product with our AI chat.</p>
+          <span class="badge badge-primary feature-tag">Coming Soon</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       WHY BUYWISE — COMPARISON
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="section why-buywise" id="comparison" aria-labelledby="why-heading">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">
+          <i data-lucide="arrow-right-left" width="12" height="12"></i>
+          The Difference
+        </div>
+        <h2 id="why-heading">The Old Way vs <span class="gradient-text">The BuyWise Way</span></h2>
+        <p>Shopping in shouldn't feel like gambling. Here's what changes when AI does the research for you.</p>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- Old Way -->
+        <div class="comparison-col old-way">
+          <div class="comparison-header">
+            <i data-lucide="x-circle" width="18" height="18"></i>
+            The Old Way
+          </div>
+          <ul class="comparison-items">
+            <li class="comparison-item">
+              <i data-lucide="x" width="16" height="16" class="ci-icon"></i>
+              Read hundreds of mixed reviews manually
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="x" width="16" height="16" class="ci-icon"></i>
+              Can't tell real reviews from fake ones
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="x" width="16" height="16" class="ci-icon"></i>
+              Overwhelmed by technical jargon and specs
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="x" width="16" height="16" class="ci-icon"></i>
+              Hours of research, still uncertain
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="x" width="16" height="16" class="ci-icon"></i>
+              Regret purchases after the return window closes
+            </li>
+          </ul>
+        </div>
+
+        <!-- VS Divider -->
+        <div class="comparison-divider">
+          <div class="vs-badge">VS</div>
+        </div>
+
+        <!-- BuyWise Way -->
+        <div class="comparison-col new-way">
+          <div class="comparison-header">
+            <i data-lucide="check-circle-2" width="18" height="18"></i>
+            The BuyWise Way
+          </div>
+          <ul class="comparison-items">
+            <li class="comparison-item">
+              <i data-lucide="check" width="16" height="16" class="ci-icon"></i>
+              AI summarizes 10,000+ reviews in seconds
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="check" width="16" height="16" class="ci-icon"></i>
+              Fake reviews flagged and filtered automatically
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="check" width="16" height="16" class="ci-icon"></i>
+              Plain-English explanations of every spec
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="check" width="16" height="16" class="ci-icon"></i>
+              One-click trust score with full reasoning
+            </li>
+            <li class="comparison-item">
+              <i data-lucide="check" width="16" height="16" class="ci-icon"></i>
+              Confident buying decisions you won't regret
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       STATS
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="stats-section" aria-label="Platform statistics">
+    <div class="container">
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-number" data-counter="50000" data-suffix="+">0+</span>
+          <span class="stat-label">Products Analyzed</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" data-counter="2000000" data-suffix="+">0+</span>
+          <span class="stat-label">Reviews Processed</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" data-counter="98" data-suffix="%">0%</span>
+          <span class="stat-label">Fake Review Detection Rate</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" data-counter="25000" data-suffix="+">0+</span>
+          <span class="stat-label">Happy Users</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       TESTIMONIALS
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="section testimonials" aria-labelledby="testimonials-heading">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-label">
+          <i data-lucide="star" width="12" height="12"></i>
+          Social Proof
+        </div>
+        <h2 id="testimonials-heading">What Our Users Say</h2>
+        <p>Join thousands of people who shop smarter with BuyWise AI every day.</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <!-- Testimonial 1 -->
+        <div class="testimonial-card">
+          <div class="testimonial-stars" aria-label="5 stars">
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+          </div>
+          <p class="testimonial-text">"I was about to buy headphones with a 4.8 rating until BuyWise told me 40% of
+            reviews were likely fake. Saved me $200 and pointed me to a genuinely better product."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg, #6C63FF, #00D4AA)">MK</div>
+            <div>
+              <div class="author-name">Marcus Kim</div>
+              <div class="author-role">Tech Enthusiast, Seoul</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="testimonial-card">
+          <div class="testimonial-stars" aria-label="5 stars">
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+          </div>
+          <p class="testimonial-text">"The trust score feature is genius. Instead of spending three hours comparing
+            laptops, I got a clear answer in 30 seconds. This is the future of shopping."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg, #FF5E7E, #FFB930)">SP</div>
+            <div>
+              <div class="author-name">Sophia Patel</div>
+              <div class="author-role">UX Designer, London</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="testimonial-card">
+          <div class="testimonial-stars" aria-label="5 stars">
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+            <i data-lucide="star" width="14" height="14" style="fill:currentColor"></i>
+          </div>
+          <p class="testimonial-text">"As someone who reviews products professionally, I use BuyWise to cross-check my
+            analysis. The AI's fake review detection is surprisingly accurate."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg, #00D4AA, #3B82F6)">JR</div>
+            <div>
+              <div class="author-name">James Rodriguez</div>
+              <div class="author-role">Consumer Tech Reviewer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       CTA BANNER
+       ════════════════════════════════════════════════════════════════════ -->
+  <section class="cta-banner" aria-labelledby="cta-heading">
+    <div class="cta-banner-glow" aria-hidden="true"></div>
+    <div class="container">
+      <div class="cta-banner-inner">
+        <div class="section-label">
+          <i data-lucide="rocket" width="12" height="12"></i>
+          Get Started Today
+        </div>
+        <h2 id="cta-heading">Start Making <span class="gradient-text">Smarter Purchases</span></h2>
+        <p>Join 25,000+ smart shoppers who trust BuyWise AI to cut through the noise and find products that actually
+          deliver.</p>
+        <div class="cta-banner-actions">
+          <a href="{{ url_for('search') }}" class="btn btn-primary btn-lg">
+            <i data-lucide="search" width="18" height="18"></i>
+            Search a Product — It's Free
+          </a>
+          {% if not session.user_id %}
+          <a href="{{ url_for('register') }}" class="btn btn-ghost btn-lg">
+            Create Free Account
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       FOOTER
+       ════════════════════════════════════════════════════════════════════ -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Brand Col -->
+        <div class="footer-brand-col">
+          <a href="{{ url_for('index') }}" class="footer-logo">
+            <div class="footer-logo-mark">✦</div>
+            <span class="footer-logo-text">BuyWise AI</span>
+          </a>
+          <p class="footer-tagline">AI-powered product intelligence for the modern consumer. Know before you buy — every
+            time.</p>
+          <div class="footer-newsletter">
+            <input type="email" class="footer-newsletter-input" placeholder="Get product insights by email"
+              aria-label="Newsletter email">
+            <button class="btn btn-primary" style="padding: var(--space-2) var(--space-4);">
+              <i data-lucide="send" width="16" height="16"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Product Col -->
+        <div class="footer-nav-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="{{ url_for('search') }}">Search</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#">Pricing</a></li>
+            <li><a href="#">Changelog</a></li>
+          </ul>
+        </div>
+
+        <!-- Company Col -->
+        <div class="footer-nav-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal Col -->
+        <div class="footer-nav-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+            <li><a href="#">Accessibility</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="footer-copyright">
+          © BuyWise AI. Made with <span style="color:var(--color-accent-rose)">♥</span> for smarter shoppers.
+        </p>
+        <div class="footer-social">
+          <a href="#" class="footer-social-link" aria-label="Twitter/X">
+            <i data-lucide="twitter" width="16" height="16"></i>
+          </a>
+          <a href="#" class="footer-social-link" aria-label="GitHub">
+            <i data-lucide="github" width="16" height="16"></i>
+          </a>
+          <a href="#" class="footer-social-link" aria-label="LinkedIn">
+            <i data-lucide="linkedin" width="16" height="16"></i>
+          </a>
+          <a href="#" class="footer-social-link" aria-label="Discord">
+            <i data-lucide="message-circle" width="16" height="16"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/three-hero.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/scroll-animations.js') }}" defer></script>
+{% endblock %}
